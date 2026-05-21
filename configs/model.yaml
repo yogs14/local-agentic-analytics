@@ -1,0 +1,12 @@
+model:
+  provider: ollama
+  base_url: ${OLLAMA_BASE_URL}
+  name: ${OLLAMA_MODEL}
+  temperature: 0.0
+  context_window: 2048
+  num_gpu: 0
+  timeout_seconds: 120
+
+generation:
+  max_retries: 2
+  stream: false

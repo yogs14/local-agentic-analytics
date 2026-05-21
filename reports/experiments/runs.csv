@@ -1,0 +1,2 @@
+timestamp,user_query,generated_sql,repaired_sql,success,error_message,latency_total,latency_sql_generation,latency_sql_execution,latency_reporting
+2026-05-21T13:13:01+00:00,Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?,SELECT AVG(Global_active_power) FROM electric_power WHERE CAST(datetime AS DATE) = DATE '2006-12-16',,True,,42.7408503000006,30.60671580000053,0.12349169999924925,11.911156199999823

@@ -1,0 +1,11 @@
+duckdb:
+  database_path: databases/duckdb/analytics.duckdb
+  read_only: false
+  threads: 1
+  memory_limit: 2GB
+  temp_directory: databases/duckdb/tmp
+  preserve_insertion_order: false
+
+query:
+  max_preview_rows: 50
+  max_result_rows: 1000

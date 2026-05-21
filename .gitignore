@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment files
+.env
+
+# Local data and databases
+data/raw/*
+data/processed/*
+databases/duckdb/*
+databases/chromadb/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!databases/duckdb/.gitkeep
+!databases/chromadb/.gitkeep
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

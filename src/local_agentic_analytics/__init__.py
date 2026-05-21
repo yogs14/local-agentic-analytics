@@ -1,0 +1,1 @@
+"""Local agentic analytics package."""

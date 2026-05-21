@@ -1,0 +1,11 @@
+app:
+  name: local-agentic-analytics
+  environment: ${APP_ENV}
+  log_level: ${LOG_LEVEL}
+
+paths:
+  raw_data_dir: data/raw
+  processed_data_dir: data/processed
+  duckdb_dir: databases/duckdb
+  chromadb_dir: databases/chromadb
+  prompts_dir: src/local_agentic_analytics/prompts

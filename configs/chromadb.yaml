@@ -1,0 +1,12 @@
+chromadb:
+  persist_directory: databases/chromadb
+  collection_name: local_agentic_analytics
+  anonymized_telemetry: false
+
+embedding:
+  provider: sentence-transformers
+  model: sentence-transformers/all-MiniLM-L6-v2
+  batch_size: 8
+
+retrieval:
+  top_k: 5

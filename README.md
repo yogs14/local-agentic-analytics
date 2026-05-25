@@ -1,63 +1,70 @@
 # local-agentic-analytics
 
-Local agentic data analytics system for a final project. The system runs on a modest local laptop with 8GB RAM and GTX 1650 4GB, so the implementation is intentionally lightweight, sequential, and modular.
+## 1. Project Overview
 
-The current focus is structured analytics with DuckDB and a local Ollama small language model. ChromaDB/RAG support exists as an early-stage document retrieval module and is kept separate from the main DuckDB workflow.
+`local-agentic-analytics` adalah sistem agentic data analytics lokal untuk analisis konsumsi daya listrik rumah tangga. Sistem ini menggabungkan DuckDB, Ollama, ChromaDB, matplotlib, dan generator laporan LaTeX agar satu laptop lokal dapat menjalankan Q&A data terstruktur, evaluasi, visualisasi, insight, dan report generation tanpa layanan cloud.
 
-## Current Status
+Fokus implementasi saat ini adalah workflow DuckDB text-to-SQL untuk dataset energi. RAG berbasis ChromaDB sudah tersedia sebagai modul awal, tetapi tetap dipisahkan dari workflow utama agar sistem ringan dan mudah diuji.
 
-Implemented:
+## 2. Research Context
 
-- DuckDB ingestion for the Individual Household Electric Power Consumption dataset.
-- Lightweight DuckDB tool for schema lookup, CSV registration, SQL execution, and samples.
-- Lightweight Ollama client using local API.
-- Text-to-SQL agent for DuckDB SQL generation.
-- SQL repair agent with one repair attempt per query.
-- Reporter agent for short Indonesian answers.
-- Sequential text-to-SQL workflow, without parallel agents.
-- ChromaDB tool for persistent local document retrieval.
-- Small dummy RAG build and retrieval scripts.
-- CSV experiment logging for workflow runs.
-- Unit tests for core tools, agents, workflow, and logging.
+Project ini dikembangkan untuk tugas akhir dengan batasan perangkat lokal: RAM 8GB dan GPU GTX 1650 4GB. Karena itu desain sistem dibuat sequential, modular, dan hemat resource. Satu model lokal melalui Ollama digunakan untuk beberapa role agent, bukan satu model berbeda untuk setiap agent.
 
-Not implemented yet:
+Pertanyaan riset praktis yang didukung project ini adalah bagaimana small language model lokal dapat membantu proses analisis data terstruktur, mulai dari konversi pertanyaan bahasa natural ke SQL, repair SQL sederhana, ringkasan hasil query, evaluasi akurasi, sampai penyusunan laporan analisis.
 
-- LangGraph orchestration.
-- Full production RAG ingestion.
-- Multi-table schema selection.
-- Advanced evaluation metrics.
-- UI or API server.
+## 3. System Architecture
 
-## Project Structure
+Arsitektur utama bersifat sequential:
+
+1. User memberikan pertanyaan atau meminta laporan.
+2. DuckDB menyediakan schema dan menjalankan query data terstruktur.
+3. SQL Agent menghasilkan SQL DuckDB dari pertanyaan dan schema.
+4. Repair Agent memperbaiki SQL satu kali jika eksekusi gagal.
+5. Reporter Agent menjawab hasil query dalam bahasa Indonesia.
+6. Visualization module membuat grafik deterministik dari agregasi DuckDB.
+7. Insight Agent membuat narasi singkat dari metadata chart dan statistik ringkas.
+8. Reporting module merender LaTeX dan mencoba compile PDF.
+
+ChromaDB digunakan hanya untuk RAG/dokumen, bukan untuk data terstruktur. DuckDB tetap menjadi engine utama untuk dataset energi.
+
+## 4. Directory Structure
 
 ```text
 local-agentic-analytics/
 |-- configs/
 |-- data/
+|   |-- evaluation/
 |   |-- raw/
 |   `-- processed/
 |-- databases/
 |   |-- chromadb/
 |   `-- duckdb/
+|-- docs/
 |-- notebooks/
+|-- references/
+|   `-- sql_gold/
 |-- reports/
-|   `-- experiments/
+|   |-- experiments/
+|   |-- figures/
+|   |-- latex/
+|   `-- pdf/
 |-- scripts/
 |-- src/
 |   `-- local_agentic_analytics/
 |       |-- agents/
 |       |-- core/
-|       |-- data/
 |       |-- evaluation/
 |       |-- graph/
 |       |-- prompts/
-|       `-- tools/
+|       |-- reporting/
+|       |-- tools/
+|       `-- visualization/
 `-- tests/
 ```
 
-## Setup on Windows
+## 5. Setup Environment
 
-Use Python 3.10 or 3.11.
+Gunakan Python 3.10 atau 3.11 di Windows PowerShell.
 
 ```powershell
 py -3.11 -m venv .venv
@@ -67,161 +74,161 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-If Python 3.11 is not installed, use Python 3.10:
-
-```powershell
-py -3.10 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-Copy-Item .env.example .env
-```
-
-If the `py` launcher is unavailable, use:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-Copy-Item .env.example .env
-```
-
-## Ollama Setup
-
-Install and start Ollama, then make sure the configured model is available.
+Pastikan Ollama berjalan dan model tersedia.
 
 ```powershell
 ollama pull gemma2:2b
 ollama list
 ```
 
-The default config uses:
+Default konfigurasi memakai `num_gpu: 0` untuk mengurangi risiko out-of-memory pada GTX 1650 4GB.
 
-```yaml
-model:
-  provider: ollama
-  name: ${OLLAMA_MODEL}
-  context_window: 2048
-  num_gpu: 0
-```
+## 6. Download Dataset
 
-`num_gpu: 0` is intentional for stability on GTX 1650 4GB. It avoids CUDA out-of-memory crashes by running generation on CPU. It is slower, but more reliable on the target laptop.
-
-## Dataset Ingestion
-
-Place the UCI Individual Household Electric Power Consumption file here:
+Dataset yang digunakan adalah Individual Household Electric Power Consumption dari UCI Machine Learning Repository. Unduh file dataset, lalu letakkan file mentah di:
 
 ```text
 data/raw/energy/household_power_consumption.txt
 ```
 
-Then run:
+Jika folder `data/raw/energy/` belum ada, buat folder tersebut terlebih dahulu.
+
+## 7. Ingest Energy Dataset
+
+Jalankan ingestion untuk membuat DuckDB database dan tabel `electric_power`.
 
 ```powershell
 python scripts/ingest_energy.py
 ```
 
-This creates or replaces the DuckDB table:
+Output utama:
 
 ```text
 databases/duckdb/analytics.duckdb
 table: electric_power
 ```
 
-The ingestion uses DuckDB directly and avoids pandas full-dataset processing.
+Script ingestion menggunakan DuckDB langsung dan menghindari full processing dataset besar dengan pandas.
 
-## Text-to-SQL Workflow
+## 8. Run Q&A Workflow
 
-Run a local analytics query:
+Mode Q&A melalui CLI:
+
+```powershell
+python -m local_agentic_analytics.cli ask "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?"
+```
+
+Script lama tetap tersedia dan memanggil mode CLI yang sama:
 
 ```powershell
 python scripts/run_workflow.py "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?"
 ```
 
-The script prints:
+Output mencakup generated SQL, repaired SQL jika ada, result, final answer, latency, dan status.
 
-- generated SQL
-- repaired SQL, if any
-- compact query result
-- final Indonesian answer
-- latency per step
-- success or failure status
+## 9. Run Batch Evaluation
 
-Workflow steps:
-
-1. Read `electric_power` schema from DuckDB.
-2. Generate DuckDB SQL with the local Ollama model.
-3. Execute SQL with DuckDB.
-4. If SQL fails, repair once.
-5. Execute repaired SQL once.
-6. Generate a short Indonesian report.
-7. Log latency and status.
-
-## RAG / ChromaDB
-
-Build a small dummy ChromaDB collection:
+Batch evaluation menjalankan banyak pertanyaan energi dari `data/evaluation/energy_questions.json`.
 
 ```powershell
-python scripts/build_chromadb.py
+python scripts/run_batch_eval.py
 ```
 
-Smoke test retrieval only:
-
-```powershell
-python scripts/test_rag_retrieval.py
-```
-
-Run a simple RAG query with ChromaDB retrieval and Ollama answer generation:
-
-```powershell
-python scripts/run_rag_query.py "Apa satuan Global_active_power?"
-```
-
-RAG is currently experimental and uses small dummy documents. It does not use DuckDB.
-
-## Evaluation Logs
-
-Workflow runs append logs to:
+Output disimpan ke:
 
 ```text
-reports/experiments/runs.csv
+reports/experiments/batch_eval_energy.csv
 ```
 
-Logged columns include:
-
-- timestamp
-- user_query
-- generated_sql
-- repaired_sql
-- success
-- error_message
-- latency_total
-- latency_sql_generation
-- latency_sql_execution
-- latency_reporting
-
-## Run Tests
+Gold SQL benchmark dapat dijalankan dengan:
 
 ```powershell
-python -m pytest tests
+python scripts/run_sql_gold_eval.py
+python scripts/analyze_sql_gold_mismatches.py
 ```
 
-Some ChromaDB/Pydantic deprecation warnings may appear. They are dependency warnings, not test failures.
+Output utama:
 
-## Development Principles
+```text
+reports/experiments/sql_gold_eval.csv
+reports/experiments/sql_gold_mismatch_report.md
+```
 
-- Keep workflows sequential and lightweight.
-- Use one local model through Ollama for multiple agent roles.
-- Do not create parallel multi-agent execution.
-- Do not use different models for each agent.
-- Use DuckDB for structured data.
-- Use ChromaDB only for RAG/document retrieval.
-- Avoid loading large datasets with pandas.
-- Keep files small and modular.
-- Add tests or validation scripts for important tools and features.
-- Avoid heavy dependencies such as TensorFlow, custom GPU Torch builds, AutoGen, or CrewAI unless there is a clear reason.
+## 10. Generate Energy Charts
 
-## Notes
+Generate semua grafik energi deterministik dari agregasi DuckDB:
 
-This project is optimized for gradual development. The current stable path is DuckDB text-to-SQL. RAG is available as a separate early-stage module and should be expanded later after the structured analytics workflow is reliable.
+```powershell
+python scripts/generate_energy_charts.py
+```
+
+Output:
+
+```text
+reports/figures/daily_active_power_trend.png
+reports/figures/hourly_consumption_pattern.png
+reports/figures/power_distribution.png
+reports/figures/voltage_distribution.png
+reports/figures/correlation_heatmap.png
+reports/figures/sub_metering_comparison.png
+```
+
+## 11. Generate LaTeX/PDF Report
+
+Mode report melalui CLI:
+
+```powershell
+python -m local_agentic_analytics.cli report energy
+```
+
+Script lama tetap tersedia:
+
+```powershell
+python scripts/generate_energy_report.py
+```
+
+Output:
+
+```text
+reports/latex/energy_analysis_report.tex
+reports/pdf/energy_analysis_report.pdf
+reports/experiments/report_generation_log.json
+```
+
+PDF membutuhkan `tectonic` atau `pdflatex`. Jika compiler tidak tersedia, file `.tex` dan log tetap disimpan.
+
+## 12. Evaluation Metrics
+
+Metrik evaluasi yang sudah didukung:
+
+- Latency per tahap workflow.
+- SQL execution success rate.
+- Batch evaluation success rate.
+- Gold SQL numeric match rate.
+- Absolute error dan relative error untuk hasil numerik.
+- Report generation success, termasuk status LaTeX dan PDF.
+- Health check readiness untuk environment, database, tabel, dan folder output.
+
+Jalankan health check:
+
+```powershell
+python scripts/check_project_health.py
+```
+
+## 13. Known Limitations
+
+- Kualitas SQL bergantung pada model Ollama lokal dan prompt.
+- Workflow utama masih single-table untuk `electric_power`.
+- Repair Agent hanya melakukan satu kali repair per query.
+- RAG masih tahap awal dengan dokumen dummy kecil.
+- PDF generation membutuhkan compiler LaTeX eksternal.
+- Analisis anomali belum final karena membutuhkan baseline atau pembanding historis eksplisit.
+
+## 14. Future Work
+
+- Menambahkan schema selection untuk multi-table analytics.
+- Mengembangkan RAG ingestion dari dokumentasi dataset yang lebih lengkap.
+- Menambahkan resource logging yang lebih detail untuk memori, CPU, dan durasi model.
+- Menambahkan evaluasi kualitas narasi insight dan laporan.
+- Menambahkan UI atau API server jika workflow inti sudah stabil.
+- Mengintegrasikan LangGraph secara bertahap tanpa mengubah prinsip sequential execution.

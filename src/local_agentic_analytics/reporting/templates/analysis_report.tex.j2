@@ -1,0 +1,51 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+\setlength{\parskip}{0.7em}
+\setlength{\parindent}{0pt}
+
+\title{ {{ report.title | latex_escape }} }
+\author{ {{ report.author | latex_escape }} }
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+{{ report.abstract | latex_escape }}
+\end{abstract}
+
+\section{Introduction}
+{{ report.introduction | latex_escape }}
+
+\section{Methodology}
+{{ report.methodology | latex_escape }}
+
+\section{Detailed Analysis}
+{% for section in report.sections %}
+\subsection{ {{ section.title | latex_escape }} }
+{{ section.content | latex_escape }}
+
+{% for figure in section.figures %}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{\detokenize{ {{- figure.path | latex_path -}} }}
+\caption{ {{ figure.caption | latex_escape }} }
+\label{fig:{{ figure.figure_id | latex_label }}}
+\end{figure}
+{% endfor %}
+{% endfor %}
+
+\section{Synthesis and Implications}
+{{ report.synthesis | latex_escape }}
+
+\section{Conclusion}
+{{ report.conclusion | latex_escape }}
+
+\end{document}

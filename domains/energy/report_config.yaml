@@ -1,0 +1,20 @@
+report:
+  title: Laporan Analisis Konsumsi Daya Listrik Rumah Tangga
+  author: Local Agentic Analytics
+  output_tex: reports/latex/energy_analysis_report.tex
+  output_pdf_dir: reports/pdf
+
+sections:
+  introduction: true
+  methodology: true
+  detailed_analysis: true
+  synthesis: true
+  conclusion: true
+
+charts:
+  - daily_active_power_trend
+  - hourly_consumption_pattern
+  - power_distribution
+  - voltage_distribution
+  - correlation_heatmap
+  - sub_metering_comparison

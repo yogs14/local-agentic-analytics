@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from local_agentic_analytics.agents.sql_cleaning import clean_sql_response
+from local_agentic_analytics.domain.adapters import DomainAdapter
 from local_agentic_analytics.prompts.sql_prompt import build_sql_prompt
 from local_agentic_analytics.tools.ollama_tool import OllamaTool
 
@@ -14,7 +15,10 @@ class SQLAgent:
         self,
         ollama_tool: OllamaTool | None = None,
         temperature: float = 0.0,
-        max_tokens: int = 512,
+        max_tokens: int = 96,
+        domain_adapter: DomainAdapter | None = None,
+        dataset_profile_context: str | None = None,
+        debug_prompt_length: bool = False,
     ):
         if temperature < 0:
             raise ValueError("temperature must be non-negative")
@@ -23,17 +27,35 @@ class SQLAgent:
 
         self.ollama_tool = ollama_tool or OllamaTool.from_config()
         self.temperature = temperature
+        # SQL generation stays short because the expected output is one SQL query.
         self.max_tokens = max_tokens
+        self.domain_adapter = domain_adapter
+        self.dataset_profile_context = dataset_profile_context
+        self.debug_prompt_length = debug_prompt_length
 
-    def generate_sql(self, question: str, schema: str) -> str:
+    def generate_sql(
+        self,
+        question: str,
+        schema: str,
+        dataset_profile_context: str | None = None,
+    ) -> str:
         """Generate a SQL string only."""
-        prompt = build_sql_prompt(question=question, schema=schema)
+        profile_context = dataset_profile_context or self.dataset_profile_context
+
+        prompt = build_sql_prompt(
+            question=question,
+            schema=schema,
+            dataset_profile_context=profile_context,
+        )
+        if self.debug_prompt_length:
+            print(f"SQL prompt length: {len(prompt)} characters")
+
         response = self.ollama_tool.generate(
             prompt=prompt,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
         )
-        sql = clean_sql_response(response)
+        sql = clean_sql_response(response, question=question)
 
         if not sql:
             raise RuntimeError("SQL agent returned an empty response")

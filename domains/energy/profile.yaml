@@ -1,0 +1,67 @@
+dataset:
+  name: household_power_consumption
+  domain: energy
+  table_name: electric_power
+  datetime_column: datetime
+  sampling_frequency: per_minute
+  description: Dataset konsumsi listrik rumah tangga per menit.
+
+columns:
+  Global_active_power:
+    type: numeric
+    unit: kW
+    semantic_type: active_power
+    description: Daya aktif global rata-rata dalam kilowatt.
+    rules:
+      average_sql: AVG(Global_active_power)
+      total_energy_kwh_sql: SUM(Global_active_power) / 60.0
+      average_alias: avg_global_active_power_kw
+      total_energy_alias: total_energy_kwh
+
+  Global_reactive_power:
+    type: numeric
+    unit: kW
+    semantic_type: reactive_power
+    description: Daya reaktif global.
+
+  Voltage:
+    type: numeric
+    unit: V
+    semantic_type: voltage
+    description: Tegangan listrik.
+    rules:
+      average_sql: AVG(Voltage)
+      average_alias: avg_voltage_v
+
+  Global_intensity:
+    type: numeric
+    unit: A
+    semantic_type: current
+    description: Intensitas arus listrik.
+    rules:
+      average_sql: AVG(Global_intensity)
+      average_alias: avg_global_intensity_a
+
+  Sub_metering_1:
+    type: numeric
+    unit: Wh
+    semantic_type: sub_metering
+    description: Sub-metering area 1.
+
+  Sub_metering_2:
+    type: numeric
+    unit: Wh
+    semantic_type: sub_metering
+    description: Sub-metering area 2.
+
+  Sub_metering_3:
+    type: numeric
+    unit: Wh
+    semantic_type: sub_metering
+    description: Sub-metering area 3.
+
+sql_rules:
+  date_filter: "CAST(datetime AS DATE) = DATE 'YYYY-MM-DD'"
+  total_energy_kwh: "SUM(Global_active_power) / 60.0"
+  missing_value_count: "COUNT(*) FILTER (WHERE <column> IS NULL)"
+  forbidden_missing_value_pattern: "COUNT(DISTINCT CASE WHEN ... THEN 1 END)"

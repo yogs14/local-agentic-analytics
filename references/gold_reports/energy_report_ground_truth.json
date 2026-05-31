@@ -1,0 +1,41 @@
+{
+  "report_id": "energy_analysis_report",
+  "required_sections": [
+    "Abstract",
+    "Introduction",
+    "Methodology",
+    "Detailed Analysis",
+    "Synthesis and Implications",
+    "Conclusion"
+  ],
+  "required_charts": [
+    "daily_active_power_trend",
+    "hourly_consumption_pattern",
+    "power_distribution",
+    "voltage_distribution",
+    "correlation_heatmap",
+    "sub_metering_comparison"
+  ],
+  "unit_rules": {
+    "Global_active_power average": "kW",
+    "total energy from Global_active_power": "kWh using SUM(Global_active_power)/60.0",
+    "Voltage": "V",
+    "Global_intensity": "A"
+  },
+  "numeric_facts": [
+    {
+      "id": "N001",
+      "description": "average active power on 2006-12-16",
+      "value": 3.0534747475,
+      "unit": "kW",
+      "tolerance": 0.00001
+    },
+    {
+      "id": "N002",
+      "description": "total energy on 2006-12-16",
+      "value": 20.1529333333,
+      "unit": "kWh",
+      "tolerance": 0.00001
+    }
+  ]
+}

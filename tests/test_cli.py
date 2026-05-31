@@ -25,6 +25,13 @@ class FakeWorkflow:
             },
             final_answer="Nilainya adalah 1.",
             latency={"total": 0.1},
+            tool_calls=[
+                {
+                    "tool": "duckdb.schema",
+                    "status": "success",
+                    "latency_seconds": 0.01,
+                }
+            ],
             success=True,
         )
 
@@ -60,6 +67,8 @@ def test_cli_ask_prints_expected_sections(tmp_path, monkeypatch, capsys):
     assert "Result:" in output
     assert "Final answer:" in output
     assert "Latency:" in output
+    assert "Tool calls:" in output
+    assert "- duckdb.schema: success, 0.010s" in output
     assert "Status: sukses" in output
 
 

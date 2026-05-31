@@ -72,11 +72,40 @@ def test_generate_posts_to_ollama_api(monkeypatch):
     assert result == "hello"
     assert captured_payload["model"] == "qwen2.5:3b"
     assert captured_payload["stream"] is False
+    assert captured_payload["keep_alive"] == "30m"
     assert captured_payload["options"] == {
         "temperature": 0.2,
         "num_predict": 32,
         "num_ctx": 1024,
         "num_gpu": 0,
+    }
+
+
+def test_generate_stores_ollama_profiling_metrics(monkeypatch):
+    def fake_post(url, json, timeout):
+        return FakeResponse(
+            payload={
+                "response": "  SELECT 1;  ",
+                "total_duration": 2_000_000_000,
+                "load_duration": 500_000_000,
+                "prompt_eval_count": 42,
+                "prompt_eval_duration": 250_000_000,
+                "eval_count": 8,
+                "eval_duration": 1_250_000_000,
+            }
+        )
+
+    monkeypatch.setattr(requests, "post", fake_post)
+    tool = OllamaTool(base_url="http://localhost:11434", model="qwen2.5:3b")
+
+    assert tool.generate("SELECT query") == "SELECT 1;"
+    assert tool.get_last_metrics() == {
+        "total_duration": 2.0,
+        "load_duration": 0.5,
+        "prompt_eval_count": 42,
+        "prompt_eval_duration": 0.25,
+        "eval_count": 8,
+        "eval_duration": 1.25,
     }
 
 
@@ -105,6 +134,7 @@ def test_from_config_reads_model_yaml_and_env_values(monkeypatch):
                 "timeout_seconds": 90,
                 "context_window": 2048,
                 "num_gpu": 0,
+                "keep_alive": "1h",
             }
         },
     )
@@ -116,3 +146,22 @@ def test_from_config_reads_model_yaml_and_env_values(monkeypatch):
     assert tool.timeout_seconds == 90
     assert tool.context_window == 2048
     assert tool.num_gpu == 0
+    assert tool.keep_alive == "1h"
+
+
+def test_ollama_tool_validates_keep_alive_duration():
+    assert (
+        OllamaTool(
+            base_url="http://localhost:11434",
+            model="qwen2.5:3b",
+            keep_alive="",
+        ).keep_alive
+        == "30m"
+    )
+
+    with pytest.raises(ValueError, match="keep_alive must be a duration string"):
+        OllamaTool(
+            base_url="http://localhost:11434",
+            model="qwen2.5:3b",
+            keep_alive="forever",
+        )

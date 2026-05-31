@@ -132,6 +132,21 @@ def print_qa_state(state: AnalyticsState) -> None:
         print(f"- {step_name}: {seconds:.3f}s")
 
     print()
+    print("Tool calls:")
+    if state.tool_calls:
+        for tool_call in state.tool_calls:
+            tool = tool_call.get("tool", "-")
+            status = tool_call.get("status", "-")
+            latency = tool_call.get("latency_seconds", 0.0)
+            try:
+                latency_text = f"{float(latency):.3f}s"
+            except (TypeError, ValueError):
+                latency_text = "-"
+            print(f"- {tool}: {status}, {latency_text}")
+    else:
+        print("-")
+
+    print()
     print(f"Status: {'sukses' if state.success else 'gagal'}")
     if not state.success:
         print(f"Error: {state.error_message or 'Unknown error'}")
@@ -164,6 +179,9 @@ def state_to_run_log(state: AnalyticsState) -> dict:
         "success": state.success,
         "error_message": state.error_message or "",
         "latency": state.latency,
+        "selected_tools": state.selected_tools,
+        "tool_calls": state.tool_calls,
+        "route": state.route or "",
     }
 
 

@@ -18,14 +18,60 @@ Arsitektur utama bersifat sequential:
 
 1. User memberikan pertanyaan atau meminta laporan.
 2. DuckDB menyediakan schema dan menjalankan query data terstruktur.
-3. SQL Agent menghasilkan SQL DuckDB dari pertanyaan dan schema.
-4. Repair Agent memperbaiki SQL satu kali jika eksekusi gagal.
-5. Reporter Agent menjawab hasil query dalam bahasa Indonesia.
-6. Visualization module membuat grafik deterministik dari agregasi DuckDB.
-7. Insight Agent membuat narasi singkat dari metadata chart dan statistik ringkas.
-8. Reporting module merender LaTeX dan mencoba compile PDF.
+3. DatasetProfile menyediakan metadata domain, table name, unit, dan semantic SQL rules.
+4. Rule-based SQL resolver mencoba menyelesaikan query umum secara deterministik.
+5. Jika rule tidak cocok, SQL Agent menghasilkan SQL DuckDB dari pertanyaan dan schema.
+6. SQL semantic guard memeriksa kesalahan lama seperti total kWh tanpa `/60.0` dan missing value yang salah.
+7. Repair Agent memperbaiki SQL satu kali jika query gagal atau melanggar semantic guard.
+8. Reporter Agent menjawab hasil query dalam bahasa Indonesia.
+9. Visualization module membuat grafik deterministik dari agregasi DuckDB.
+10. Insight Agent membuat narasi singkat dari metadata chart dan statistik ringkas.
+11. Reporting module merender LaTeX dan mencoba compile PDF.
 
 ChromaDB digunakan hanya untuk RAG/dokumen, bukan untuk data terstruktur. DuckDB tetap menjadi engine utama untuk dataset energi.
+
+Agent memakai satu model lokal melalui Ollama dengan role prompt berbeda. SQL Agent, Repair Agent, Reporter Agent, dan Insight Agent bukan model terpisah; semuanya berbagi satu backend SLM agar cocok dengan batasan laptop lokal.
+
+### Dataset Profile / Domain Adapter
+
+Metadata domain disimpan di `domains/energy/profile.yaml`. Profile ini mendefinisikan nama tabel canonical, kolom datetime, daftar kolom, satuan, dan semantic SQL rules seperti:
+
+- `Global_active_power` adalah daya dalam `kW`.
+- Total energi dari data per menit dihitung dengan `SUM(Global_active_power) / 60.0`.
+- Missing value dihitung dengan `COUNT(*) FILTER (WHERE column IS NULL)`.
+- Filter tanggal memakai `CAST(datetime AS DATE) = DATE 'YYYY-MM-DD'`.
+
+`DatasetProfile` membuat workflow tidak sepenuhnya hardcoded ke dataset energi. Untuk domain baru, adapter/profile domain dapat ditambahkan bertahap tanpa merombak workflow utama.
+
+### Tool Calling and Audit Log
+
+Tool calling dilakukan secara eksplisit melalui wrapper lokal:
+
+- `DuckDBTool` untuk schema lookup dan query data terstruktur.
+- `ChromaDBTool` untuk retrieval dokumen RAG.
+- `sql_semantic_guard` untuk validasi semantik SQL energi.
+- Visualization module untuk chart deterministik.
+- LaTeX renderer dan PDF compiler untuk report artifacts.
+
+Setiap tool call di Q&A workflow dicatat ke `state.tool_calls` dan `reports/experiments/tool_call_audit.jsonl`. Audit log menyimpan `component`, `action`, `tool`, `status`, latency, input/output summary, error message, dan metadata. Untuk Ollama, metadata dapat berisi `load_duration`, `prompt_eval_duration`, `eval_duration`, `prompt_eval_count`, dan `eval_count`.
+
+### Report Ground Truth Evaluation
+
+Report evaluation memakai ground truth di:
+
+```text
+references/gold_reports/energy_report_ground_truth.json
+```
+
+Evaluator mengecek section wajib, chart wajib, keberadaan LaTeX, status compile PDF, dan menghasilkan `final_score`. Output evaluasi disimpan ke:
+
+```text
+reports/experiments/report_eval.json
+```
+
+### Why LangGraph Is Not Integrated Yet
+
+Workflow saat ini masih custom sequential workflow. LangGraph sengaja belum diintegrasikan karena tahap sekarang memprioritaskan stabilitas fondasi: DatasetProfile, semantic SQL rules, rule-based resolver, tool-call audit log, SQL/report evaluation, dan report generation. Setelah komponen ini stabil, LangGraph dapat ditambahkan sebagai orkestrator workflow tanpa mengubah prinsip utama: ringan, sequential, satu model lokal, dan tidak paralel.
 
 ## 4. Directory Structure
 
@@ -40,8 +86,11 @@ local-agentic-analytics/
 |   |-- chromadb/
 |   `-- duckdb/
 |-- docs/
+|-- domains/
+|   `-- energy/
 |-- notebooks/
 |-- references/
+|   |-- gold_reports/
 |   `-- sql_gold/
 |-- reports/
 |   |-- experiments/
@@ -61,6 +110,8 @@ local-agentic-analytics/
 |       `-- visualization/
 `-- tests/
 ```
+
+Generated/local artifacts seperti report output, database DuckDB, vector store ChromaDB, dan dataset mentah tidak dipush ke repository. Foldernya tetap disediakan dengan `.gitkeep`, sedangkan isi lokal seperti `reports/figures/*`, `reports/latex/*`, `reports/pdf/*`, `reports/experiments/*`, `databases/duckdb/*`, `databases/chromadb/*`, dan `data/raw/*` diabaikan oleh `.gitignore`.
 
 ## 5. Setup Environment
 
@@ -202,17 +253,26 @@ PDF membutuhkan `tectonic` atau `pdflatex`. Jika compiler tidak tersedia, file `
 Metrik evaluasi yang sudah didukung:
 
 - Latency per tahap workflow.
+- Tool-call audit trail per step workflow.
 - SQL execution success rate.
 - Batch evaluation success rate.
 - Gold SQL numeric match rate.
+- Semantic mismatch analysis untuk SQL gold evaluation.
 - Absolute error dan relative error untuk hasil numerik.
 - Report generation success, termasuk status LaTeX dan PDF.
+- Report ground truth evaluation untuk section, chart, LaTeX, PDF, dan final score.
 - Health check readiness untuk environment, database, tabel, dan folder output.
 
 Jalankan health check:
 
 ```powershell
 python scripts/check_project_health.py
+```
+
+Jalankan report evaluation:
+
+```powershell
+python scripts/evaluate_report.py
 ```
 
 ## 13. Known Limitations

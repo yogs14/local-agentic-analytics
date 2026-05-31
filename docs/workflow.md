@@ -8,13 +8,16 @@ Urutan:
 
 1. User menjalankan CLI `ask`.
 2. Sistem memeriksa database DuckDB.
-3. Schema `electric_power` dibaca melalui `DuckDBTool`.
-4. SQL Agent menghasilkan SQL DuckDB.
-5. SQL dieksekusi oleh DuckDB.
-6. Jika gagal, Repair Agent memperbaiki SQL satu kali.
-7. Query hasil repair dieksekusi ulang.
-8. Reporter Agent membuat jawaban bahasa Indonesia.
-9. Latency dan status disimpan ke log eksperimen.
+3. DatasetProfile domain `energy` dimuat dari `domains/energy/profile.yaml`.
+4. Schema `electric_power` dibaca melalui `DuckDBTool`.
+5. Rule-based SQL resolver mencoba membuat SQL deterministik untuk query umum.
+6. Jika rule tidak cocok, SQL Agent menghasilkan SQL DuckDB dengan compact DatasetProfile context.
+7. SQL semantic guard memvalidasi aturan energi penting.
+8. SQL dieksekusi oleh DuckDB.
+9. Jika gagal atau tidak lolos semantic guard, Repair Agent memperbaiki SQL satu kali.
+10. Query hasil repair divalidasi dan dieksekusi ulang.
+11. Reporter Agent membuat jawaban bahasa Indonesia.
+12. Latency, selected tools, tool calls, dan status disimpan ke log eksperimen.
 
 Command:
 
@@ -44,6 +47,27 @@ Output:
 ```text
 reports/experiments/batch_eval_energy.csv
 ```
+
+## Tool Call Audit Trail
+
+Setiap step Q&A workflow dicatat sebagai tool call. Jejak ini tersedia di:
+
+```text
+reports/experiments/tool_call_audit.jsonl
+```
+
+Tool call yang umum muncul:
+
+- `duckdb.schema`
+- `rule_based_sql_resolver.resolve`
+- `ollama.sql_generation` jika resolver tidak cocok
+- `sql_semantic_guard.validate`
+- `duckdb.query`
+- `ollama.sql_repair` jika repair terjadi
+- `duckdb.query_repaired` jika repair terjadi
+- `ollama.reporting`
+
+Setiap record minimal berisi timestamp, component, action, tool, status, latency, input summary, output summary, error message, dan metadata. Untuk tool Ollama, metadata dapat menunjukkan `load_duration`, `prompt_eval_duration`, `eval_duration`, `prompt_eval_count`, dan `eval_count`.
 
 ## Gold SQL Evaluation Workflow
 
@@ -84,4 +108,22 @@ Command:
 
 ```powershell
 python -m local_agentic_analytics.cli report energy
+```
+
+## Report Evaluation Workflow
+
+Report evaluation membandingkan artefak laporan dengan ground truth.
+
+Urutan:
+
+1. Baca ground truth dari `references/gold_reports/energy_report_ground_truth.json`.
+2. Baca metadata report dari `reports/experiments/report_generation_log.json`.
+3. Baca LaTeX dari `reports/latex/energy_analysis_report.tex`.
+4. Hitung section completeness, chart validity, PDF compile status, LaTeX existence, dan final score.
+5. Simpan hasil ke `reports/experiments/report_eval.json`.
+
+Command:
+
+```powershell
+python scripts/evaluate_report.py
 ```

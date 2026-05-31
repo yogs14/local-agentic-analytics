@@ -5,7 +5,9 @@
 Latency dicatat per tahap workflow:
 
 - schema lookup,
+- rule-based SQL resolution,
 - SQL generation,
+- semantic SQL validation,
 - SQL execution,
 - SQL repair jika terjadi,
 - reporting,
@@ -16,6 +18,7 @@ Log utama tersedia di:
 ```text
 reports/experiments/runs.csv
 reports/experiments/batch_eval_energy.csv
+reports/experiments/tool_call_audit.jsonl
 ```
 
 ## SQL Execution Success Rate
@@ -36,6 +39,8 @@ Contoh aturan:
 - Global_intensity memakai Ampere.
 - Missing value dihitung dengan `COUNT(*) FILTER (WHERE column IS NULL)`.
 
+Aturan ini ditanam di DatasetProfile, prompt SQL Agent, RuleBasedSQLResolver, dan `sql_semantic_guard`. Guard saat ini sengaja sempit: hanya menjaga regresi lama untuk total energi kWh dan missing value count.
+
 ## Gold SQL Comparison
 
 Gold SQL comparison membandingkan hasil SQL agent dengan SQL manual untuk pertanyaan penting.
@@ -55,6 +60,26 @@ reports/experiments/sql_gold_eval.csv
 reports/experiments/sql_gold_mismatch_report.md
 ```
 
+## Semantic Mismatch Analysis
+
+Semantic mismatch analysis membaca hasil SQL gold evaluation dan menandai kemungkinan penyebab mismatch.
+
+Kategori diagnosis awal:
+
+- `possible_unit_conversion_issue`
+- `possible_aggregation_issue`
+- `possible_grouping_issue`
+- `possible_date_filter_issue`
+- `unknown`
+
+Script:
+
+```powershell
+python scripts/analyze_sql_gold_mismatches.py
+```
+
+Analisis ini membantu memperbaiki prompt, DatasetProfile, resolver, atau semantic guard tanpa menebak-nebak dari satu query manual.
+
 ## Report Generation Success
 
 Report generation dievaluasi dari:
@@ -72,6 +97,50 @@ reports/experiments/report_generation_log.json
 reports/latex/energy_analysis_report.tex
 reports/pdf/energy_analysis_report.pdf
 ```
+
+## Report Ground Truth Evaluation
+
+Report evaluation membandingkan artefak report dengan ground truth:
+
+```text
+references/gold_reports/energy_report_ground_truth.json
+```
+
+Metrik awal:
+
+- `section_completeness`
+- `chart_validity`
+- `pdf_compile_success`
+- `latex_exists`
+- `required_chart_count`
+- `existing_chart_count`
+- `final_score`
+
+Numeric accuracy untuk isi LaTeX belum diparse otomatis pada tahap ini dan ditandai `not_implemented`. Output:
+
+```text
+reports/experiments/report_eval.json
+```
+
+Command:
+
+```powershell
+python scripts/evaluate_report.py
+```
+
+## Tool Call Logs
+
+Tool-call logs dipakai untuk auditability dan diagnosis latency. Setiap record mencatat:
+
+- component dan action,
+- nama tool canonical,
+- status sukses/gagal,
+- latency,
+- ringkasan input/output,
+- error message,
+- metadata.
+
+Untuk Ollama, metadata dapat menunjukkan apakah lambat karena model loading, prompt evaluation, atau output generation.
 
 ## Memory and Resource Logging
 

@@ -54,6 +54,43 @@ reports/experiments/report_generation_log.json
 
 Metadata berisi status chart, jumlah insight berhasil, status LaTeX, status PDF, path output, dan pesan error jika ada.
 
+## Ground Truth Evaluation
+
+Report ground truth berada di:
+
+```text
+references/gold_reports/energy_report_ground_truth.json
+```
+
+Ground truth mendefinisikan:
+
+- section wajib: Abstract, Introduction, Methodology, Detailed Analysis, Synthesis and Implications, Conclusion.
+- chart wajib: daily active power trend, hourly consumption pattern, power distribution, voltage distribution, correlation heatmap, dan sub metering comparison.
+- unit rules untuk `kW`, `kWh`, `V`, dan `A`.
+- numeric facts awal untuk pertanyaan energi penting.
+
+Evaluator report membaca metadata, file LaTeX, dan ground truth, lalu menghitung:
+
+- `section_completeness`
+- `chart_validity`
+- `pdf_compile_success`
+- `latex_exists`
+- `final_score`
+
+Numeric accuracy dari isi LaTeX belum diparse otomatis pada tahap ini. Field tersebut disimpan sebagai `null` dengan catatan `not_implemented`.
+
+Command:
+
+```powershell
+python scripts/evaluate_report.py
+```
+
+Output:
+
+```text
+reports/experiments/report_eval.json
+```
+
 ## Command
 
 ```powershell

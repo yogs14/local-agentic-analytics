@@ -34,3 +34,25 @@ databases/chromadb/*
 Thumbs.db
 .vscode/
 .idea/
+
+# Generated reports and experiment outputs
+reports/figures/*
+reports/latex/*
+reports/pdf/*
+reports/experiments/*
+!reports/figures/.gitkeep
+!reports/latex/.gitkeep
+!reports/pdf/.gitkeep
+!reports/experiments/.gitkeep
+
+# Local LaTeX compiler binary
+tectonic.exe
+
+# LaTeX auxiliary files
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz

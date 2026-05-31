@@ -18,4 +18,8 @@ class AnalyticsState:
     error_message: str | None = None
     final_answer: str | None = None
     latency: dict[str, float] = field(default_factory=dict)
+    selected_tools: list[str] = field(default_factory=list)
+    tool_calls: list[dict[str, Any]] = field(default_factory=list)
+    retrieved_context: list[dict[str, Any]] = field(default_factory=list)
+    route: str | None = None
     success: bool = False

@@ -9,6 +9,7 @@ Arsitektur konseptualnya dapat dibaca sebagai:
 - Brain: Ollama local SLM yang menjalankan satu model lokal untuk beberapa role agent.
 - Hand: tools yang melakukan aksi nyata, seperti DuckDB query, ChromaDB retrieval, SQL semantic guard, visualization, LaTeX render, dan PDF compile.
 - Memory: DuckDB untuk data terstruktur, ChromaDB untuk dokumen, DatasetProfile untuk metadata domain, dan log eksperimen untuk audit.
+- Orchestrator: workflow custom sequential atau LangGraph sebagai alternatif untuk Q&A.
 
 ## Sequential Multi-Agent Workflow
 
@@ -107,4 +108,14 @@ PDF dibuat melalui `tectonic` jika tersedia, lalu fallback ke `pdflatex`.
 
 ## LangGraph Position
 
-LangGraph belum diintegrasikan pada tahap ini. Workflow custom sequential dipertahankan sampai DatasetProfile, semantic SQL rules, tool-call audit log, SQL evaluation, dan report evaluation stabil. Setelah fondasi ini konsisten, LangGraph dapat dipakai sebagai orchestration layer tanpa mengubah prinsip single-SLM, sequential execution, dan local-first analytics.
+LangGraph sudah tersedia sebagai orkestrator alternatif untuk Q&A workflow. Default CLI tetap memakai workflow custom sequential, sedangkan LangGraph dapat dipilih eksplisit dengan `--engine langgraph`.
+
+Integrasi LangGraph merepresentasikan workflow sebagai graph state, node, edge, dan conditional routing. Jalur ini mempertahankan prinsip single-SLM, sequential execution, dan local-first analytics. Node LangGraph tetap memanggil komponen yang sama dengan workflow custom: DatasetProfile, RuleBasedSQLResolver, SQLAgent, SQLRepairAgent, ReporterAgent, DuckDBTool, semantic SQL guard, dan tool-call audit log. Report workflow sengaja belum dipindahkan ke LangGraph.
+
+Command Q&A:
+
+```powershell
+python -m local_agentic_analytics.cli ask "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?" --engine custom
+python -m local_agentic_analytics.cli ask "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?" --engine langgraph
+python scripts/compare_workflow_engines.py
+```

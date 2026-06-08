@@ -25,6 +25,30 @@ Command:
 python -m local_agentic_analytics.cli ask "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?"
 ```
 
+Default Q&A engine tetap `custom`. Untuk mencoba orkestrator LangGraph yang sequential:
+
+```powershell
+python -m local_agentic_analytics.cli ask "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?" --engine custom
+python -m local_agentic_analytics.cli ask "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?" --engine langgraph
+```
+
+Diagram LangGraph Q&A:
+
+```text
+START
+  -> initialize_state
+  -> load_profile
+  -> load_schema
+  -> resolve_rule_based_sql
+  -> generate_sql jika resolver gagal
+  -> semantic_validate_sql
+  -> execute_sql
+  -> repair_sql jika gagal
+  -> generate_answer
+  -> finalize
+  -> END
+```
+
 ## Batch Evaluation Workflow
 
 Batch evaluation menguji stabilitas workflow pada banyak pertanyaan.
@@ -40,6 +64,7 @@ Command:
 
 ```powershell
 python scripts/run_batch_eval.py
+python scripts/compare_workflow_engines.py
 ```
 
 Output:

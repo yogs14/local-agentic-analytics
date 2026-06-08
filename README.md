@@ -69,9 +69,11 @@ Evaluator mengecek section wajib, chart wajib, keberadaan LaTeX, status compile 
 reports/experiments/report_eval.json
 ```
 
-### Why LangGraph Is Not Integrated Yet
+### LangGraph Alternative Orchestrator
 
-Workflow saat ini masih custom sequential workflow. LangGraph sengaja belum diintegrasikan karena tahap sekarang memprioritaskan stabilitas fondasi: DatasetProfile, semantic SQL rules, rule-based resolver, tool-call audit log, SQL/report evaluation, dan report generation. Setelah komponen ini stabil, LangGraph dapat ditambahkan sebagai orkestrator workflow tanpa mengubah prinsip utama: ringan, sequential, satu model lokal, dan tidak paralel.
+Workflow Q&A default tetap memakai engine `custom`, yaitu `SequentialAnalyticsWorkflow`. LangGraph tersedia sebagai orkestrator alternatif melalui `--engine langgraph`, bukan sebagai pengganti langsung workflow lama.
+
+Integrasi LangGraph dipakai untuk merepresentasikan workflow Q&A sebagai graph state, node, edge, dan conditional routing. Jalur ini tidak mengganti komponen domain dan tool yang sudah ada: `DuckDBTool`, `SQLAgent`, `SQLRepairAgent`, `ReporterAgent`, `DatasetProfile`, semantic SQL guard, dan tool-call audit tetap dipakai. Eksekusinya tetap sequential agar sesuai dengan batasan laptop lokal dan prinsip single local SLM.
 
 ## 4. Directory Structure
 
@@ -169,10 +171,23 @@ Mode Q&A melalui CLI:
 python -m local_agentic_analytics.cli ask "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?"
 ```
 
+Engine dapat dipilih eksplisit:
+
+```powershell
+python -m local_agentic_analytics.cli ask "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?" --engine custom
+python -m local_agentic_analytics.cli ask "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?" --engine langgraph
+```
+
 Script lama tetap tersedia dan memanggil mode CLI yang sama:
 
 ```powershell
 python scripts/run_workflow.py "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?"
+```
+
+LangGraph dapat dicoba sebagai orkestrator Q&A alternatif:
+
+```powershell
+python scripts/run_workflow.py --engine langgraph "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?"
 ```
 
 Output mencakup generated SQL, repaired SQL jika ada, result, final answer, latency, dan status.
@@ -183,6 +198,7 @@ Batch evaluation menjalankan banyak pertanyaan energi dari `data/evaluation/ener
 
 ```powershell
 python scripts/run_batch_eval.py
+python scripts/compare_workflow_engines.py
 ```
 
 Output disimpan ke:
@@ -291,4 +307,4 @@ python scripts/evaluate_report.py
 - Menambahkan resource logging yang lebih detail untuk memori, CPU, dan durasi model.
 - Menambahkan evaluasi kualitas narasi insight dan laporan.
 - Menambahkan UI atau API server jika workflow inti sudah stabil.
-- Mengintegrasikan LangGraph secara bertahap tanpa mengubah prinsip sequential execution.
+- Memperluas cakupan LangGraph secara bertahap tanpa mengubah prinsip sequential execution.

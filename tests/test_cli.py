@@ -72,6 +72,46 @@ def test_cli_ask_prints_expected_sections(tmp_path, monkeypatch, capsys):
     assert "Status: sukses" in output
 
 
+def test_cli_ask_can_select_langgraph_engine(tmp_path, monkeypatch, capsys):
+    db_path = tmp_path / "analytics.duckdb"
+    db_path.write_bytes(b"duckdb placeholder")
+    created = []
+    monkeypatch.setattr(cli, "get_default_duckdb_path", lambda: db_path)
+    monkeypatch.setattr(
+        cli,
+        "_LANGGRAPH_WORKFLOW_RUNNER",
+        lambda user_query: created.append(user_query)
+        or FakeWorkflow().run(user_query),
+    )
+    monkeypatch.setattr(cli, "append_run_log", lambda log: None)
+
+    exit_code = cli.main(["ask", "--engine", "langgraph", "Berapa", "nilainya?"])
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert created == ["Berapa nilainya?"]
+    assert "Final answer:" in output
+    assert "Status: sukses" in output
+
+
+def test_cli_ask_run_log_includes_engine(tmp_path, monkeypatch):
+    db_path = tmp_path / "analytics.duckdb"
+    db_path.write_bytes(b"duckdb placeholder")
+    logs = []
+    monkeypatch.setattr(cli, "get_default_duckdb_path", lambda: db_path)
+    monkeypatch.setattr(
+        cli,
+        "_LANGGRAPH_WORKFLOW_RUNNER",
+        lambda user_query: FakeWorkflow().run(user_query),
+    )
+    monkeypatch.setattr(cli, "append_run_log", logs.append)
+
+    exit_code = cli.main(["ask", "--engine", "langgraph", "Berapa", "nilainya?"])
+
+    assert exit_code == 0
+    assert logs[0]["engine"] == "langgraph"
+
+
 def test_cli_ask_prints_clear_message_when_database_missing(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(cli, "get_default_duckdb_path", lambda: tmp_path / "missing.duckdb")
 

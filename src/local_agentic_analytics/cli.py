@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Sequence
+from typing import Callable, Sequence
 
 from local_agentic_analytics.core.config import PROJECT_ROOT, load_config
 from local_agentic_analytics.core.state import AnalyticsState
@@ -20,6 +20,8 @@ from local_agentic_analytics.graph.workflow import SequentialAnalyticsWorkflow
 MISSING_DATABASE_MESSAGE = (
     "Database belum ditemukan. Jalankan python scripts/ingest_energy.py terlebih dahulu."
 )
+QA_ENGINES = ("custom", "langgraph")
+_LANGGRAPH_WORKFLOW_RUNNER: Callable[[str], AnalyticsState] | None = None
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -37,6 +39,12 @@ def build_parser() -> argparse.ArgumentParser:
         "question",
         nargs="+",
         help="Pertanyaan analitik untuk tabel electric_power.",
+    )
+    ask_parser.add_argument(
+        "--engine",
+        choices=QA_ENGINES,
+        default="custom",
+        help="Orkestrator Q&A yang digunakan. Default: custom.",
     )
 
     report_parser = subparsers.add_parser(
@@ -57,7 +65,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "ask":
-        return run_ask(" ".join(args.question).strip())
+        return run_ask(" ".join(args.question).strip(), engine=args.engine)
     if args.command == "report" and args.report_type == "energy":
         return run_energy_report()
 
@@ -65,9 +73,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 2
 
 
-def run_ask(user_query: str) -> int:
+def run_ask(user_query: str, engine: str = "custom") -> int:
     if not user_query:
         print("Pertanyaan tidak boleh kosong.")
+        return 1
+    if engine not in QA_ENGINES:
+        print(f"Engine tidak didukung: {engine}")
         return 1
 
     db_path = get_default_duckdb_path()
@@ -75,11 +86,24 @@ def run_ask(user_query: str) -> int:
         print(MISSING_DATABASE_MESSAGE)
         return 1
 
-    workflow = SequentialAnalyticsWorkflow()
-    state = workflow.run(user_query)
-    append_run_log(state_to_run_log(state))
+    state = run_qa_workflow(user_query, engine)
+    append_run_log(state_to_run_log(state, engine=engine))
     print_qa_state(state)
     return 0 if state.success else 1
+
+
+def run_qa_workflow(user_query: str, engine: str) -> AnalyticsState:
+    if engine == "langgraph":
+        runner = _LANGGRAPH_WORKFLOW_RUNNER
+        if runner is None:
+            from local_agentic_analytics.graph.langgraph_workflow import (
+                run_langgraph_workflow as runner,
+            )
+
+        return runner(user_query)
+
+    workflow = SequentialAnalyticsWorkflow()
+    return workflow.run(user_query)
 
 
 def run_energy_report() -> int:
@@ -171,8 +195,9 @@ def print_report_metadata(metadata: dict) -> None:
         print(f"- Error: {error_message}")
 
 
-def state_to_run_log(state: AnalyticsState) -> dict:
+def state_to_run_log(state: AnalyticsState, engine: str = "custom") -> dict:
     return {
+        "engine": engine,
         "user_query": state.user_query,
         "generated_sql": state.generated_sql or "",
         "repaired_sql": state.repaired_sql or "",

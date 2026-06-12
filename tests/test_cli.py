@@ -42,14 +42,48 @@ class FakeReportWorkflow:
 
     def run(self) -> dict:
         return {
+            "engine": "custom",
+            "success": True,
+            "tex_success": True,
+            "pdf_success": True,
             "tex_path": "reports/latex/energy_analysis_report.tex",
             "pdf_path": "reports/pdf/energy_analysis_report.pdf",
+            "log_path": "reports/experiments/report_generation_log.json",
             "chart_count": 6,
-            "pdf_success": True,
-            "tex_success": True,
+            "latency": {"total": 0.25},
+            "tool_calls": [
+                {
+                    "tool": "report.generate_charts",
+                    "status": "success",
+                    "latency_seconds": 0.02,
+                }
+            ],
             "pdf_error": "",
             "error_message": "",
         }
+
+
+def fake_langgraph_report_runner(domain: str) -> dict:
+    return {
+        "engine": "langgraph",
+        "success": False,
+        "tex_success": True,
+        "pdf_success": False,
+        "tex_path": "reports/latex/energy_analysis_report.tex",
+        "pdf_path": "",
+        "log_path": "reports/experiments/report_generation_log.json",
+        "chart_count": 6,
+        "latency": {"generate_charts": 0.12},
+        "tool_calls": [
+            {
+                "tool": "report.compile_pdf",
+                "status": "error",
+                "latency_seconds": 0.03,
+            }
+        ],
+        "pdf_error": "pdflatex not found",
+        "error_message": "",
+    }
 
 
 def test_cli_ask_prints_expected_sections(tmp_path, monkeypatch, capsys):
@@ -132,10 +166,98 @@ def test_cli_report_energy_prints_report_metadata(tmp_path, monkeypatch, capsys)
 
     output = capsys.readouterr().out
     assert exit_code == 0
-    assert "LaTeX path:" in output
-    assert "PDF path:" in output
-    assert "Jumlah chart: 6" in output
-    assert "Status compile: sukses" in output
+    assert "- engine: custom" in output
+    assert "- success: True" in output
+    assert "- tex_success: True" in output
+    assert "- pdf_success: True" in output
+    assert "- tex_path: reports/latex/energy_analysis_report.tex" in output
+    assert "- pdf_path: reports/pdf/energy_analysis_report.pdf" in output
+    assert "- log_path: reports/experiments/report_generation_log.json" in output
+    assert "- chart_count: 6" in output
+    assert "Latency:" in output
+    assert "- total: 0.250s" in output
+    assert "Tool calls:" in output
+    assert "- report.generate_charts: success, 0.020s" in output
+
+
+def test_cli_report_energy_custom_engine_prints_report_metadata(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    db_path = tmp_path / "analytics.duckdb"
+    db_path.write_bytes(b"duckdb placeholder")
+    monkeypatch.setattr(cli, "DEFAULT_REPORT_DB_PATH", db_path)
+    monkeypatch.setattr(cli, "EnergyReportWorkflow", FakeReportWorkflow)
+
+    exit_code = cli.main(["report", "energy", "--engine", "custom"])
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "- engine: custom" in output
+    assert "- tex_success: True" in output
+
+
+def test_cli_report_energy_langgraph_engine_prints_report_metadata(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    db_path = tmp_path / "analytics.duckdb"
+    db_path.write_bytes(b"duckdb placeholder")
+    monkeypatch.setattr(cli, "DEFAULT_REPORT_DB_PATH", db_path)
+    monkeypatch.setattr(
+        cli,
+        "_LANGGRAPH_REPORT_WORKFLOW_RUNNER",
+        fake_langgraph_report_runner,
+    )
+
+    exit_code = cli.main(["report", "energy", "--engine", "langgraph"])
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "- engine: langgraph" in output
+    assert "- success: False" in output
+    assert "- tex_success: True" in output
+    assert "- pdf_success: False" in output
+    assert "- report.compile_pdf: error, 0.030s" in output
+    assert "pdf_error: pdflatex not found" in output
+
+
+def test_report_metadata_normalizer_adds_custom_defaults():
+    metadata = cli.normalize_report_metadata(
+        {
+            "tex_success": True,
+            "chart_count": 6,
+        },
+        engine="custom",
+    )
+
+    assert metadata["engine"] == "custom"
+    assert metadata["log_path"] == ""
+    assert metadata["latency"] == {}
+    assert metadata["tool_calls"] == []
+
+
+def test_print_report_metadata_shows_empty_latency_and_tool_calls(capsys):
+    metadata = cli.normalize_report_metadata(
+        {
+            "success": True,
+            "tex_success": True,
+            "pdf_success": False,
+            "tex_path": "reports/latex/energy_analysis_report.tex",
+            "chart_count": 6,
+        },
+        engine="custom",
+    )
+
+    cli.print_report_metadata(metadata)
+
+    output = capsys.readouterr().out
+    assert "- engine: custom" in output
+    assert "- tex_path: reports/latex/energy_analysis_report.tex" in output
+    assert "Latency:\n{}" in output
+    assert "Tool calls:\n[]" in output
 
 
 def test_cli_report_energy_prints_clear_message_when_database_missing(

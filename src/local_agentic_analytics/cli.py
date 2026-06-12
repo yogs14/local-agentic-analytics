@@ -21,7 +21,9 @@ MISSING_DATABASE_MESSAGE = (
     "Database belum ditemukan. Jalankan python scripts/ingest_energy.py terlebih dahulu."
 )
 QA_ENGINES = ("custom", "langgraph")
+REPORT_ENGINES = ("custom", "langgraph")
 _LANGGRAPH_WORKFLOW_RUNNER: Callable[[str], AnalyticsState] | None = None
+_LANGGRAPH_REPORT_WORKFLOW_RUNNER: Callable[[str], dict] | None = None
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -56,6 +58,12 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["energy"],
         help="Jenis laporan yang akan dibuat.",
     )
+    report_parser.add_argument(
+        "--engine",
+        choices=REPORT_ENGINES,
+        default="custom",
+        help="Orkestrator report yang digunakan. Default: custom.",
+    )
 
     return parser
 
@@ -67,7 +75,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "ask":
         return run_ask(" ".join(args.question).strip(), engine=args.engine)
     if args.command == "report" and args.report_type == "energy":
-        return run_energy_report()
+        return run_energy_report(engine=args.engine)
 
     parser.error("Unsupported command")
     return 2
@@ -106,17 +114,44 @@ def run_qa_workflow(user_query: str, engine: str) -> AnalyticsState:
     return workflow.run(user_query)
 
 
-def run_energy_report() -> int:
+def run_energy_report(engine: str = "custom") -> int:
+    if engine not in REPORT_ENGINES:
+        print(f"Engine report tidak didukung: {engine}")
+        return 1
+
     db_path = DEFAULT_REPORT_DB_PATH
     if not db_path.exists():
         print(MISSING_DATABASE_MESSAGE)
         return 1
 
-    workflow = EnergyReportWorkflow(db_path=db_path)
-    metadata = workflow.run()
+    metadata = run_report_workflow(engine=engine, db_path=db_path)
+    metadata = normalize_report_metadata(metadata, engine=engine)
     print_report_metadata(metadata)
 
     return 0 if metadata.get("tex_success") else 1
+
+
+def normalize_report_metadata(metadata: dict, engine: str) -> dict:
+    normalized = dict(metadata)
+    normalized.setdefault("engine", engine)
+    normalized.setdefault("log_path", "")
+    normalized.setdefault("latency", {})
+    normalized.setdefault("tool_calls", [])
+    return normalized
+
+
+def run_report_workflow(engine: str, db_path: Path) -> dict:
+    if engine == "langgraph":
+        runner = _LANGGRAPH_REPORT_WORKFLOW_RUNNER
+        if runner is None:
+            from local_agentic_analytics.graph.langgraph_report_workflow import (
+                run_langgraph_report_workflow as runner,
+            )
+
+        return runner("energy")
+
+    workflow = EnergyReportWorkflow(db_path=db_path)
+    return workflow.run()
 
 
 def get_default_duckdb_path() -> Path:
@@ -181,18 +216,61 @@ def print_qa_state(state: AnalyticsState) -> None:
 
 
 def print_report_metadata(metadata: dict) -> None:
-    pdf_success = bool(metadata.get("pdf_success"))
-    compile_status = "sukses" if pdf_success else "gagal"
-
     print("Energy report:")
-    print(f"- LaTeX path: {metadata.get('tex_path') or '-'}")
-    print(f"- PDF path: {metadata.get('pdf_path') or '-'}")
-    print(f"- Jumlah chart: {metadata.get('chart_count', 0)}")
-    print(f"- Status compile: {compile_status}")
+    print(f"- engine: {metadata.get('engine') or 'custom'}")
+    print(f"- success: {bool(metadata.get('success'))}")
+    print(f"- tex_success: {bool(metadata.get('tex_success'))}")
+    print(f"- pdf_success: {bool(metadata.get('pdf_success'))}")
+    print(f"- tex_path: {metadata.get('tex_path') or '-'}")
+    print(f"- pdf_path: {metadata.get('pdf_path') or '-'}")
+    print(f"- log_path: {metadata.get('log_path') or '-'}")
+    print(f"- chart_count: {metadata.get('chart_count', 0)}")
 
-    error_message = metadata.get("error_message") or metadata.get("pdf_error")
+    print()
+    print("Latency:")
+    latency = metadata.get("latency")
+    if isinstance(latency, dict):
+        if latency:
+            for step_name, seconds in latency.items():
+                try:
+                    latency_text = f"{float(seconds):.3f}s"
+                except (TypeError, ValueError):
+                    latency_text = "-"
+                print(f"- {step_name}: {latency_text}")
+        else:
+            print("{}")
+    else:
+        print("-")
+
+    print()
+    print("Tool calls:")
+    tool_calls = metadata.get("tool_calls")
+    if isinstance(tool_calls, list):
+        if tool_calls:
+            for tool_call in tool_calls:
+                if not isinstance(tool_call, dict):
+                    continue
+                tool = tool_call.get("tool", "-")
+                status = tool_call.get("status", "-")
+                latency_seconds = tool_call.get("latency_seconds", 0.0)
+                try:
+                    latency_text = f"{float(latency_seconds):.3f}s"
+                except (TypeError, ValueError):
+                    latency_text = "-"
+                print(f"- {tool}: {status}, {latency_text}")
+        else:
+            print("[]")
+    else:
+        print("-")
+
+    error_message = metadata.get("error_message")
+    pdf_error = metadata.get("pdf_error")
     if error_message:
-        print(f"- Error: {error_message}")
+        print()
+        print(f"error_message: {error_message}")
+    if pdf_error:
+        print()
+        print(f"pdf_error: {pdf_error}")
 
 
 def state_to_run_log(state: AnalyticsState, engine: str = "custom") -> dict:

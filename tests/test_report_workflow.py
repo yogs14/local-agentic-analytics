@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import sys
 
 import duckdb
@@ -87,15 +88,24 @@ def test_energy_report_workflow_generates_tex_pdf_and_log(tmp_path, monkeypatch)
 
     metadata = workflow.run()
 
+    assert metadata["engine"] == "custom"
     assert metadata["success"] is True
     assert metadata["tex_success"] is True
     assert metadata["pdf_success"] is True
+    assert metadata["log_path"] == str(log_path)
+    assert metadata["latency"] == {}
+    assert metadata["tool_calls"] == []
     assert metadata["chart_count"] == 6
     assert metadata["insight_success_count"] == 6
     assert len(fake_agent.calls) == 6
     assert latex_path.exists()
     assert (pdf_dir / "energy_analysis_report.pdf").exists()
     assert log_path.exists()
+    log_metadata = json.loads(log_path.read_text(encoding="utf-8"))
+    assert log_metadata["engine"] == "custom"
+    assert log_metadata["log_path"] == str(log_path)
+    assert log_metadata["latency"] == {}
+    assert log_metadata["tool_calls"] == []
 
     tex_content = latex_path.read_text(encoding="utf-8")
     assert "Laporan Analisis Konsumsi Daya Listrik Rumah Tangga" in tex_content
@@ -173,5 +183,9 @@ def test_energy_report_workflow_logs_failure_when_database_missing(tmp_path):
 
     assert metadata["success"] is False
     assert metadata["tex_success"] is False
+    assert metadata["engine"] == "custom"
+    assert metadata["log_path"] == str(log_path)
+    assert metadata["latency"] == {}
+    assert metadata["tool_calls"] == []
     assert "DuckDB database not found" in metadata["error_message"]
     assert log_path.exists()

@@ -96,6 +96,7 @@ class EnergyReportWorkflow:
             finished_at = datetime.now(timezone.utc)
 
         metadata = {
+            "engine": "custom",
             "timestamp_start": started_at.isoformat(),
             "timestamp_end": finished_at.isoformat(),
             "success": tex_path is not None and not pdf_error and not workflow_error,
@@ -107,6 +108,7 @@ class EnergyReportWorkflow:
             "figures_dir": str(self.figures_dir),
             "tex_path": str(tex_path) if tex_path else "",
             "pdf_path": str(pdf_path) if pdf_path else "",
+            "log_path": str(self.log_path),
             "chart_count": len(chart_metadata),
             "insight_success_count": sum(
                 1 for record in insight_records if record.get("success")
@@ -114,6 +116,8 @@ class EnergyReportWorkflow:
             "insight_failed_count": sum(
                 1 for record in insight_records if not record.get("success")
             ),
+            "latency": {},
+            "tool_calls": [],
             "charts": chart_metadata,
             "insights": insight_records,
         }

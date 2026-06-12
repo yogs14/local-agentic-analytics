@@ -107,13 +107,17 @@ def test_report_eval_loader_rejects_non_object_json(tmp_path):
 
 def test_evaluate_report_artifacts_scores_sections_charts_and_pdf(tmp_path):
     chart_dir = tmp_path / "figures"
+    pdf_dir = tmp_path / "pdf"
     chart_dir.mkdir()
+    pdf_dir.mkdir()
     required_charts = [
         "daily_active_power_trend",
         "hourly_consumption_pattern",
     ]
     for chart_id in required_charts:
         (chart_dir / f"{chart_id}.png").write_bytes(b"fake png")
+    pdf_path = pdf_dir / "energy_analysis_report.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4")
 
     ground_truth_path = tmp_path / "ground_truth.json"
     metadata_path = tmp_path / "metadata.json"
@@ -149,6 +153,7 @@ def test_evaluate_report_artifacts_scores_sections_charts_and_pdf(tmp_path):
         json.dumps(
             {
                 "pdf_success": True,
+                "pdf_path": str(pdf_path),
                 "charts": [
                     {
                         "chart_id": chart_id,
@@ -168,6 +173,10 @@ Ringkasan.
 \section{Introduction}
 \section{Methodology}
 \section{Detailed Analysis}
+Rata-rata Global_active_power pada 2006-12-16 adalah 3.05 kW.
+Total energy from Global_active_power pada 2006-12-16 adalah 20.153 kWh.
+Voltage rata-rata ditampilkan dalam V.
+Global_intensity rata-rata ditampilkan dalam A.
 \section{Synthesis and Implications}
 \section{Conclusion}
 """,
@@ -178,28 +187,49 @@ Ringkasan.
         ground_truth_path=ground_truth_path,
         metadata_path=metadata_path,
         latex_path=latex_path,
+        figures_dir=chart_dir,
+        pdf_dir=pdf_dir,
     )
 
     assert result["section_completeness"] == 1.0
     assert result["chart_validity"] == 1.0
     assert result["pdf_compile_success"] is True
     assert result["latex_exists"] is True
+    assert result["unit_rule_compliance"] == 1.0
+    assert result["numeric_fact_coverage"] == 1.0
     assert result["required_chart_count"] == 2
     assert result["existing_chart_count"] == 2
+    assert result["final_report_score"] == 1.0
     assert result["final_score"] == 1.0
-    assert result["numeric_accuracy"] is None
-    assert "not_implemented" in result["numeric_accuracy_note"]
+    assert result["numeric_accuracy"] == 1.0
+    assert result["missing_numeric_facts"] == []
 
 
 def test_evaluate_report_artifacts_reports_missing_sections_and_chart_files(tmp_path):
     ground_truth_path = tmp_path / "ground_truth.json"
     metadata_path = tmp_path / "metadata.json"
     latex_path = tmp_path / "report.tex"
+    chart_dir = tmp_path / "figures"
+    pdf_dir = tmp_path / "pdf"
+    chart_dir.mkdir()
+    pdf_dir.mkdir()
     ground_truth_path.write_text(
         json.dumps(
             {
                 "required_sections": ["Abstract", "Introduction", "Conclusion"],
                 "required_charts": ["daily_active_power_trend", "power_distribution"],
+                "unit_rules": {
+                    "Global_active_power average": "kW",
+                    "Voltage": "V",
+                },
+                "numeric_facts": [
+                    {
+                        "id": "N001",
+                        "description": "average active power",
+                        "value": 3.0534747475,
+                        "unit": "kW",
+                    }
+                ],
             }
         ),
         encoding="utf-8",
@@ -224,6 +254,8 @@ def test_evaluate_report_artifacts_reports_missing_sections_and_chart_files(tmp_
         ground_truth_path=ground_truth_path,
         metadata_path=metadata_path,
         latex_path=latex_path,
+        figures_dir=chart_dir,
+        pdf_dir=pdf_dir,
     )
 
     assert result["section_completeness"] == pytest.approx(1 / 3)
@@ -232,4 +264,7 @@ def test_evaluate_report_artifacts_reports_missing_sections_and_chart_files(tmp_
     assert result["missing_charts"] == ["power_distribution"]
     assert result["missing_chart_files"] == ["daily_active_power_trend"]
     assert result["pdf_compile_success"] is False
+    assert result["unit_rule_compliance"] == 0.0
+    assert result["numeric_fact_coverage"] == 0.0
+    assert result["missing_numeric_facts"] == ["N001"]
     assert result["final_score"] < 1.0

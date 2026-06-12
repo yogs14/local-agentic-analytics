@@ -1,0 +1,134 @@
+[
+  {
+    "id": "E001",
+    "question": "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?",
+    "expected_unit": "kW",
+    "category": "aggregation"
+  },
+  {
+    "id": "E002",
+    "question": "Berapa rata-rata konsumsi daya aktif pada tanggal 17 Desember 2006?",
+    "expected_unit": "kW",
+    "category": "aggregation"
+  },
+  {
+    "id": "E003",
+    "question": "Berapa total energi kWh pada tanggal 16 Desember 2006 berdasarkan Global_active_power?",
+    "expected_unit": "kWh",
+    "category": "energy_total"
+  },
+  {
+    "id": "E004",
+    "question": "Berapa total energi kWh pada tanggal 17 Desember 2006 berdasarkan Global_active_power?",
+    "expected_unit": "kWh",
+    "category": "energy_total"
+  },
+  {
+    "id": "E005",
+    "question": "Berapa tegangan rata-rata pada tanggal 16 Desember 2006?",
+    "expected_unit": "V",
+    "category": "voltage"
+  },
+  {
+    "id": "E006",
+    "question": "Berapa tegangan rata-rata pada tanggal 18 Desember 2006?",
+    "expected_unit": "V",
+    "category": "voltage"
+  },
+  {
+    "id": "E007",
+    "question": "Berapa daya aktif maksimum pada tanggal 16 Desember 2006?",
+    "expected_unit": "kW",
+    "category": "maximum"
+  },
+  {
+    "id": "E008",
+    "question": "Berapa daya aktif maksimum pada tanggal 17 Desember 2006?",
+    "expected_unit": "kW",
+    "category": "maximum"
+  },
+  {
+    "id": "E009",
+    "question": "Pada jam berapa konsumsi daya aktif tertinggi terjadi pada tanggal 16 Desember 2006?",
+    "expected_unit": "timestamp",
+    "category": "peak_time"
+  },
+  {
+    "id": "E010",
+    "question": "Pada jam berapa konsumsi daya aktif tertinggi terjadi pada tanggal 17 Desember 2006?",
+    "expected_unit": "timestamp",
+    "category": "peak_time"
+  },
+  {
+    "id": "E011",
+    "question": "Berapa rata-rata Sub_metering_1 pada tanggal 16 Desember 2006?",
+    "expected_unit": "Wh",
+    "category": "sub_metering"
+  },
+  {
+    "id": "E012",
+    "question": "Berapa rata-rata Sub_metering_2 pada tanggal 16 Desember 2006?",
+    "expected_unit": "Wh",
+    "category": "sub_metering"
+  },
+  {
+    "id": "E013",
+    "question": "Berapa rata-rata Sub_metering_3 pada tanggal 16 Desember 2006?",
+    "expected_unit": "Wh",
+    "category": "sub_metering"
+  },
+  {
+    "id": "E014",
+    "question": "Bandingkan rata-rata Global_active_power antara tanggal 16 Desember 2006 dan 17 Desember 2006.",
+    "expected_unit": "kW",
+    "category": "comparison"
+  },
+  {
+    "id": "E015",
+    "question": "Bandingkan total energi kWh antara tanggal 16 Desember 2006 dan 17 Desember 2006.",
+    "expected_unit": "kWh",
+    "category": "comparison"
+  },
+  {
+    "id": "E016",
+    "question": "Berapa rata-rata konsumsi daya aktif per jam pada tanggal 16 Desember 2006?",
+    "expected_unit": "kW",
+    "category": "hourly_average"
+  },
+  {
+    "id": "E017",
+    "question": "Berapa rata-rata konsumsi daya aktif per jam pada tanggal 17 Desember 2006?",
+    "expected_unit": "kW",
+    "category": "hourly_average"
+  },
+  {
+    "id": "E018",
+    "question": "Berapa jumlah missing value pada kolom Global_active_power?",
+    "expected_unit": "count",
+    "category": "missing_values"
+  },
+  {
+    "id": "E019",
+    "question": "Berapa jumlah missing value pada kolom Voltage?",
+    "expected_unit": "count",
+    "category": "missing_values"
+  },
+  {
+    "id": "E020",
+    "question": "Berapa jumlah record pada tanggal 16 Desember 2006?",
+    "expected_unit": "records",
+    "category": "record_count"
+  },
+  {
+    "id": "E021",
+    "question": "Berapa jumlah record pada tanggal 17 Desember 2006?",
+    "expected_unit": "records",
+    "category": "record_count"
+  },
+  {
+    "id": "E022",
+    "question": "Berapa rata-rata Global_intensity pada tanggal 16 Desember 2006?",
+    "expected_unit": "A",
+    "category": "aggregation"
+  }
+]

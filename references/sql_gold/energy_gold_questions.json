@@ -1,0 +1,62 @@
+[
+  {
+    "id": "E001",
+    "question": "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E001.sql",
+    "expected_unit": "kW"
+  },
+  {
+    "id": "E002",
+    "question": "Berapa rata-rata konsumsi daya aktif pada tanggal 17 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E002.sql",
+    "expected_unit": "kW"
+  },
+  {
+    "id": "E003",
+    "question": "Berapa total energi kWh pada tanggal 16 Desember 2006 berdasarkan Global_active_power?",
+    "gold_sql_file": "references/sql_gold/E003.sql",
+    "expected_unit": "kWh"
+  },
+  {
+    "id": "E004",
+    "question": "Berapa total energi kWh pada tanggal 17 Desember 2006 berdasarkan Global_active_power?",
+    "gold_sql_file": "references/sql_gold/E004.sql",
+    "expected_unit": "kWh"
+  },
+  {
+    "id": "E005",
+    "question": "Berapa tegangan rata-rata pada tanggal 16 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E005.sql",
+    "expected_unit": "V"
+  },
+  {
+    "id": "E006",
+    "question": "Berapa daya aktif maksimum pada tanggal 16 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E006.sql",
+    "expected_unit": "kW"
+  },
+  {
+    "id": "E007",
+    "question": "Pada jam berapa konsumsi daya aktif tertinggi terjadi pada tanggal 16 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E007.sql",
+    "expected_unit": "timestamp"
+  },
+  {
+    "id": "E008",
+    "question": "Berapa rata-rata Sub_metering_1, Sub_metering_2, dan Sub_metering_3 pada tanggal 16 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E008.sql",
+    "expected_unit": "Wh"
+  },
+  {
+    "id": "E009",
+    "question": "Berapa jumlah missing value pada kolom Global_active_power?",
+    "gold_sql_file": "references/sql_gold/E009.sql",
+    "expected_unit": "count"
+  },
+  {
+    "id": "E010",
+    "question": "Berapa jumlah record pada tanggal 16 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E010.sql",
+    "expected_unit": "records"
+  }
+]

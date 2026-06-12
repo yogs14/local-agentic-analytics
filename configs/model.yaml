@@ -6,6 +6,7 @@ model:
   context_window: 2048
   num_gpu: 0
   timeout_seconds: 120
+  keep_alive: 30m
 
 generation:
   max_retries: 2

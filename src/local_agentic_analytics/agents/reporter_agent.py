@@ -15,7 +15,7 @@ class ReporterAgent:
         self,
         ollama_tool: OllamaTool | None = None,
         temperature: float = 0.1,
-        max_tokens: int = 512,
+        max_tokens: int = 192,
     ):
         if temperature < 0:
             raise ValueError("temperature must be non-negative")
@@ -24,6 +24,7 @@ class ReporterAgent:
 
         self.ollama_tool = ollama_tool or OllamaTool.from_config()
         self.temperature = temperature
+        # Reporter output should stay concise but needs room for a short answer.
         self.max_tokens = max_tokens
 
     def generate_answer(self, question: str, sql: str, query_result: Any) -> str:

@@ -34,11 +34,17 @@ def test_build_repair_prompt_contains_schema_failed_sql_error_and_rules():
         failed_sql="SELECT total_power FROM electric_power",
         error_message="Binder Error: Referenced column total_power not found",
         schema="electric_power(Global_active_power DOUBLE)",
+        user_question="Berapa total energi kWh?",
     )
 
     assert "DuckDB SQL repair" in prompt
     assert "Return SQL only" in prompt
     assert "Do not add catalog or schema prefixes" in prompt
+    assert "Do not use pg_database" in prompt
+    assert "User question:" in prompt
+    assert "Original SQL:" in prompt
+    assert "SUM(Global_active_power) / 60.0 AS total_energy_kwh" in prompt
+    assert "COUNT(*) FILTER (WHERE <column> IS NULL)" in prompt
     assert "CAST(column AS DATE)" in prompt
     assert "Global_active_power" in prompt
     assert "total_power" in prompt
@@ -73,6 +79,21 @@ def test_repair_agent_strips_code_fence_if_model_returns_markdown():
     )
 
     assert sql == "SELECT COUNT(*) FROM electric_power;"
+    assert fake_tool.calls[0]["max_tokens"] == 96
+
+
+def test_repair_agent_keeps_only_first_sql_statement():
+    fake_tool = FakeOllamaTool("SELECT COUNT(*) FROM electric_power; SELECT 2;")
+    agent = SQLRepairAgent(ollama_tool=fake_tool)
+
+    sql = agent.repair_sql(
+        failed_sql="SELECT COUNT(id) FROM electric_power",
+        error_message="Binder Error: Referenced column id not found",
+        schema="electric_power(datetime TIMESTAMP)",
+    )
+
+    assert sql == "SELECT COUNT(*) FROM electric_power;"
+    assert fake_tool.calls[0]["max_tokens"] == 96
 
 
 def test_repair_agent_normalizes_timestamp_date_filter():
@@ -92,6 +113,44 @@ def test_repair_agent_normalizes_timestamp_date_filter():
         sql
         == "SELECT AVG(Global_active_power) FROM electric_power "
         "WHERE CAST(datetime AS DATE) = DATE '2006-12-16'"
+    )
+
+
+def test_repair_agent_normalizes_total_energy_semantic_error():
+    fake_tool = FakeOllamaTool(
+        "SELECT SUM(Global_active_power) FROM electric_power "
+        "WHERE CAST(datetime AS DATE) = DATE '2006-12-16'"
+    )
+    agent = SQLRepairAgent(ollama_tool=fake_tool)
+
+    sql = agent.repair_sql(
+        failed_sql="SELECT SUM(Global_active_power) FROM electric_power WHERE CAST(datetime AS DATE) = DATE '2006-12-16'",
+        error_message="Semantic mismatch: expected kWh",
+        schema="Table: electric_power\nColumns:\nGlobal_active_power: DOUBLE",
+        user_question="Berapa total energi kWh pada tanggal 16 Desember 2006 berdasarkan Global_active_power?",
+    )
+
+    assert "SUM(Global_active_power) / 60.0 AS total_energy_kwh" in sql
+
+
+def test_repair_agent_normalizes_missing_value_semantic_error_with_null_word():
+    fake_tool = FakeOllamaTool(
+        "SELECT COUNT(DISTINCT CASE WHEN Global_active_power IS NULL THEN 1 END) "
+        "FROM electric_power;"
+    )
+    agent = SQLRepairAgent(ollama_tool=fake_tool)
+
+    sql = agent.repair_sql(
+        failed_sql="SELECT COUNT(DISTINCT CASE WHEN Global_active_power IS NULL THEN 1 END) FROM electric_power;",
+        error_message="Semantic mismatch: expected missing count",
+        schema="Table: electric_power\nColumns:\nGlobal_active_power: DOUBLE",
+        user_question="Berapa jumlah null pada kolom Global_active_power?",
+    )
+
+    assert (
+        sql
+        == "SELECT COUNT(*) FILTER (WHERE Global_active_power IS NULL) "
+        "AS missing_global_active_power_count FROM electric_power;"
     )
 
 

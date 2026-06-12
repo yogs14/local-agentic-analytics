@@ -14,7 +14,7 @@ class SQLRepairAgent:
         self,
         ollama_tool: OllamaTool | None = None,
         temperature: float = 0.0,
-        max_tokens: int = 512,
+        max_tokens: int = 96,
     ):
         if temperature < 0:
             raise ValueError("temperature must be non-negative")
@@ -23,6 +23,7 @@ class SQLRepairAgent:
 
         self.ollama_tool = ollama_tool or OllamaTool.from_config()
         self.temperature = temperature
+        # SQL repair stays short because the expected output is one SQL query.
         self.max_tokens = max_tokens
 
     def repair_sql(
@@ -31,6 +32,7 @@ class SQLRepairAgent:
         error_message: str,
         schema: str,
         repair_attempted: bool = False,
+        user_question: str = "",
     ) -> str:
         """Repair a failed SQL query.
 
@@ -44,13 +46,14 @@ class SQLRepairAgent:
             failed_sql=failed_sql,
             error_message=error_message,
             schema=schema,
+            user_question=user_question,
         )
         response = self.ollama_tool.generate(
             prompt=prompt,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
         )
-        sql = clean_sql_response(response)
+        sql = clean_sql_response(response, question=user_question)
 
         if not sql:
             raise RuntimeError("SQL repair agent returned an empty response")

@@ -42,6 +42,14 @@ def test_build_reporter_prompt_contains_question_sql_result_and_rules():
     assert "bahasa Indonesia" in prompt
     assert "Gunakan hanya informasi" in prompt
     assert "perlu pembanding historis" in prompt
+    assert "Bulatkan angka desimal maksimal 2 atau 3 digit" in prompt
+    assert "kilowatt -> kW" in prompt
+    assert "kilowatt-hour -> kWh" in prompt
+    assert "Volt -> V" in prompt
+    assert "Ampere -> A" in prompt
+    assert "1-3 kalimat" in prompt
+    assert "Jika hasil query hanya satu nilai numerik" in prompt
+    assert "Jangan menambahkan insight" in prompt
     assert "AVG(Global_active_power)" in prompt
     assert '"avg_power": 1.23' in prompt
 
@@ -67,6 +75,20 @@ def test_reporter_agent_returns_indonesian_answer_from_ollama_response():
     assert answer == "Rata-rata konsumsi listrik pada hasil query adalah 1,23 kW."
     assert fake_tool.calls[0]["temperature"] == 0.1
     assert fake_tool.calls[0]["max_tokens"] == 256
+
+
+def test_reporter_agent_default_max_tokens_stays_concise():
+    fake_tool = FakeOllamaTool("Jawaban ringkas berdasarkan hasil query.")
+    agent = ReporterAgent(ollama_tool=fake_tool)
+
+    answer = agent.generate_answer(
+        question="Berapa rata-rata konsumsi listrik?",
+        sql="SELECT AVG(Global_active_power) AS avg_power FROM electric_power",
+        query_result=[{"avg_power": 1.23}],
+    )
+
+    assert answer == "Jawaban ringkas berdasarkan hasil query."
+    assert fake_tool.calls[0]["max_tokens"] == 192
 
 
 def test_reporter_agent_rejects_empty_query_result():

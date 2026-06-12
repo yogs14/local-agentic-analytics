@@ -17,8 +17,12 @@ Aturan:
 - Jangan mengarang angka, tren, penyebab, atau kesimpulan di luar hasil query.
 - Jika hasil query kosong, katakan bahwa tidak ada data yang ditemukan.
 - Jika data tidak cukup untuk menyimpulkan anomali, katakan bahwa perlu pembanding historis.
+- Bulatkan angka desimal maksimal 2 atau 3 digit kecuali user meminta presisi penuh.
+- Gunakan simbol satuan standar: kilowatt -> kW, kilowatt-hour -> kWh, Volt -> V, Ampere -> A.
+- Jawaban Q&A harus singkat, cukup 1-3 kalimat.
+- Jika hasil query hanya satu nilai numerik, jawab langsung nilai tersebut dengan satuan yang sesuai bila tersedia.
+- Jangan menambahkan insight, interpretasi, atau konteks tambahan yang tidak diminta.
 - Jangan menjelaskan proses internal.
-- Jawaban maksimal 2 paragraf pendek.
 
 Pertanyaan user:
 {question}

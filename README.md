@@ -2,9 +2,9 @@
 
 ## 1. Project Overview
 
-`local-agentic-analytics` adalah sistem agentic data analytics lokal untuk analisis konsumsi daya listrik rumah tangga. Sistem ini menggabungkan DuckDB, Ollama, ChromaDB, matplotlib, dan generator laporan LaTeX agar satu laptop lokal dapat menjalankan Q&A data terstruktur, evaluasi, visualisasi, insight, dan report generation tanpa layanan cloud.
+`local-agentic-analytics` adalah sistem agentic data analytics lokal untuk analisis konsumsi daya listrik rumah tangga. Sistem ini menggabungkan DuckDB, Ollama, ChromaDB, matplotlib, LangGraph sebagai orkestrator alternatif, dan generator laporan LaTeX agar satu laptop lokal dapat menjalankan Q&A data terstruktur, evaluasi, visualisasi, insight, report generation, dan benchmark end-to-end tanpa layanan cloud.
 
-Fokus implementasi saat ini adalah workflow DuckDB text-to-SQL untuk dataset energi. RAG berbasis ChromaDB sudah tersedia sebagai modul awal, tetapi tetap dipisahkan dari workflow utama agar sistem ringan dan mudah diuji.
+Fokus implementasi saat ini adalah workflow DuckDB text-to-SQL dan workflow report untuk dataset energi. Engine default tetap `custom`, sedangkan LangGraph tersedia sebagai alternatif eksplisit untuk Q&A dan report. RAG berbasis ChromaDB sudah tersedia sebagai modul awal, tetapi tetap dipisahkan dari workflow utama agar sistem ringan dan mudah diuji.
 
 ## 2. Research Context
 
@@ -53,7 +53,9 @@ Tool calling dilakukan secara eksplisit melalui wrapper lokal:
 - Visualization module untuk chart deterministik.
 - LaTeX renderer dan PDF compiler untuk report artifacts.
 
-Setiap tool call di Q&A workflow dicatat ke `state.tool_calls` dan `reports/experiments/tool_call_audit.jsonl`. Audit log menyimpan `component`, `action`, `tool`, `status`, latency, input/output summary, error message, dan metadata. Untuk Ollama, metadata dapat berisi `load_duration`, `prompt_eval_duration`, `eval_duration`, `prompt_eval_count`, dan `eval_count`.
+Setiap tool call di Q&A workflow dicatat ke `state.tool_calls` dan `reports/experiments/tool_call_audit.jsonl`. LangGraph report workflow juga mencatat node penting ke `tool_calls` dan JSONL audit log, termasuk `report.generate_charts`, `report.build_chart_contexts`, `ollama.generate_insights`, `report.build_report`, `report.render_latex`, `report.compile_pdf`, dan `report.write_log`.
+
+Audit log menyimpan `timestamp`, `component`, `action`, `tool`, `status`, latency, input/output summary, error message, dan metadata. Untuk Ollama, metadata dapat berisi `load_duration`, `prompt_eval_duration`, `eval_duration`, `prompt_eval_count`, dan `eval_count`.
 
 ### Report Ground Truth Evaluation
 
@@ -63,7 +65,16 @@ Report evaluation memakai ground truth di:
 references/gold_reports/energy_report_ground_truth.json
 ```
 
-Evaluator mengecek section wajib, chart wajib, keberadaan LaTeX, status compile PDF, dan menghasilkan `final_score`. Output evaluasi disimpan ke:
+Evaluator membaca metadata report, LaTeX, folder figures, folder PDF, dan ground truth. Skor yang dihitung meliputi `section_completeness`, `chart_validity`, `pdf_compile_success`, `latex_exists`, `unit_rule_compliance`, `numeric_fact_coverage`, dan `final_report_score`.
+
+Unit rules yang diperiksa:
+
+- Rata-rata `Global_active_power` harus memakai `kW`.
+- Total energy dari `Global_active_power` harus memakai `kWh`.
+- `Voltage` harus memakai `V`.
+- `Global_intensity` harus memakai `A`.
+
+Numeric fact coverage dilakukan secara deterministik dari LaTeX, misalnya nilai `3.0534747475` dapat cocok dengan bentuk rounding seperti `3.05` atau `3.053`. Evaluator tidak memakai LLM untuk menilai report. Output evaluasi disimpan ke:
 
 ```text
 reports/experiments/report_eval.json
@@ -71,9 +82,13 @@ reports/experiments/report_eval.json
 
 ### LangGraph Alternative Orchestrator
 
-Workflow Q&A default tetap memakai engine `custom`, yaitu `SequentialAnalyticsWorkflow`. LangGraph tersedia sebagai orkestrator alternatif melalui `--engine langgraph`, bukan sebagai pengganti langsung workflow lama.
+Workflow Q&A dan report default tetap memakai engine `custom`. Untuk Q&A, engine custom adalah `SequentialAnalyticsWorkflow`. Untuk report, engine custom adalah `EnergyReportWorkflow`. LangGraph tersedia sebagai orkestrator alternatif melalui `--engine langgraph`, bukan sebagai pengganti langsung workflow lama.
 
-Integrasi LangGraph dipakai untuk merepresentasikan workflow Q&A sebagai graph state, node, edge, dan conditional routing. Jalur ini tidak mengganti komponen domain dan tool yang sudah ada: `DuckDBTool`, `SQLAgent`, `SQLRepairAgent`, `ReporterAgent`, `DatasetProfile`, semantic SQL guard, dan tool-call audit tetap dipakai. Eksekusinya tetap sequential agar sesuai dengan batasan laptop lokal dan prinsip single local SLM.
+Integrasi LangGraph dipakai untuk merepresentasikan workflow sebagai graph state, node, edge, dan conditional routing. Jalur Q&A tidak mengganti komponen domain dan tool yang sudah ada: `DuckDBTool`, `SQLAgent`, `SQLRepairAgent`, `ReporterAgent`, `DatasetProfile`, semantic SQL guard, dan tool-call audit tetap dipakai.
+
+LangGraph report workflow juga bersifat alternatif. Jalurnya tetap sequential: initialize state, generate charts, build chart contexts, generate insights, build report, render LaTeX, compile PDF, write log, dan finalize. Workflow ini memakai ulang logic dari `EnergyReportWorkflow`, termasuk chart generation, report builder, LaTeX renderer, PDF compiler, dan log writer. Jika satu insight gagal, fallback insight dipakai dan workflow tetap lanjut.
+
+Kedua integrasi LangGraph tetap sequential agar sesuai dengan batasan laptop lokal dan prinsip single local SLM.
 
 ## 4. Directory Structure
 
@@ -201,10 +216,11 @@ python scripts/run_batch_eval.py
 python scripts/compare_workflow_engines.py
 ```
 
-Output disimpan ke:
+Output utama:
 
 ```text
 reports/experiments/batch_eval_energy.csv
+reports/experiments/engine_comparison.csv
 ```
 
 Gold SQL benchmark dapat dijalankan dengan:
@@ -248,21 +264,43 @@ Mode report melalui CLI:
 python -m local_agentic_analytics.cli report energy
 ```
 
+Engine report dapat dipilih eksplisit. Default tetap `custom`.
+
+```powershell
+python -m local_agentic_analytics.cli report energy --engine custom
+python -m local_agentic_analytics.cli report energy --engine langgraph
+```
+
 Script lama tetap tersedia:
 
 ```powershell
 python scripts/generate_energy_report.py
 ```
 
-Output:
+Output report:
 
 ```text
 reports/latex/energy_analysis_report.tex
 reports/pdf/energy_analysis_report.pdf
 reports/experiments/report_generation_log.json
+reports/experiments/tool_call_audit.jsonl
 ```
 
+Output CLI report menampilkan engine, success, `tex_success`, `pdf_success`, path LaTeX/PDF/log, chart count, latency, ringkasan tool calls, dan error jika ada. Return code `0` diberikan selama `tex_success=True`, sehingga workflow tetap dianggap berguna meskipun PDF compiler tidak tersedia.
+
 PDF membutuhkan `tectonic` atau `pdflatex`. Jika compiler tidak tersedia, file `.tex` dan log tetap disimpan.
+
+Bandingkan workflow report custom vs LangGraph:
+
+```powershell
+python scripts/compare_report_workflows.py
+```
+
+Output:
+
+```text
+reports/experiments/report_engine_comparison.json
+```
 
 ## 12. Evaluation Metrics
 
@@ -276,7 +314,9 @@ Metrik evaluasi yang sudah didukung:
 - Semantic mismatch analysis untuk SQL gold evaluation.
 - Absolute error dan relative error untuk hasil numerik.
 - Report generation success, termasuk status LaTeX dan PDF.
-- Report ground truth evaluation untuk section, chart, LaTeX, PDF, dan final score.
+- Report ground truth evaluation untuk section, chart, LaTeX, PDF, unit rules, numeric fact coverage, dan final report score.
+- Report engine comparison untuk custom vs LangGraph.
+- End-to-end benchmark untuk Q&A custom, Q&A LangGraph, report custom, dan report LangGraph.
 - Health check readiness untuk environment, database, tabel, dan folder output.
 
 Jalankan health check:
@@ -291,6 +331,25 @@ Jalankan report evaluation:
 python scripts/evaluate_report.py
 ```
 
+Jalankan comparison report workflow:
+
+```powershell
+python scripts/compare_report_workflows.py
+```
+
+Jalankan end-to-end benchmark:
+
+```powershell
+python scripts/run_end_to_end_benchmark.py
+```
+
+Output benchmark:
+
+```text
+reports/experiments/end_to_end_benchmark.csv
+reports/experiments/end_to_end_benchmark_summary.json
+```
+
 ## 13. Known Limitations
 
 - Kualitas SQL bergantung pada model Ollama lokal dan prompt.
@@ -298,6 +357,8 @@ python scripts/evaluate_report.py
 - Repair Agent hanya melakukan satu kali repair per query.
 - RAG masih tahap awal dengan dokumen dummy kecil.
 - PDF generation membutuhkan compiler LaTeX eksternal.
+- `unit_rule_compliance` dan `numeric_fact_coverage` mengecek teks LaTeX secara deterministik, bukan menilai kualitas narasi secara semantik.
+- Benchmark end-to-end tidak memakai LLM sebagai judge; success rate bergantung pada eksekusi workflow, gold SQL numeric match jika tersedia, dan metadata report.
 - Analisis anomali belum final karena membutuhkan baseline atau pembanding historis eksplisit.
 
 ## 14. Future Work
@@ -307,4 +368,4 @@ python scripts/evaluate_report.py
 - Menambahkan resource logging yang lebih detail untuk memori, CPU, dan durasi model.
 - Menambahkan evaluasi kualitas narasi insight dan laporan.
 - Menambahkan UI atau API server jika workflow inti sudah stabil.
-- Memperluas cakupan LangGraph secara bertahap tanpa mengubah prinsip sequential execution.
+- Memperluas cakupan domain dan benchmark tanpa mengubah prinsip sequential execution.

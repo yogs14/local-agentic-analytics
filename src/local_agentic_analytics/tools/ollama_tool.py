@@ -185,6 +185,29 @@ class OllamaTool:
         """Return profiling metrics from the most recent Ollama generation."""
         return dict(self.last_metrics)
 
+    def unload(self, model: str | None = None) -> bool:
+        """Unload a model from memory by requesting ``keep_alive=0``.
+
+        Used by benchmark scaffolding to free VRAM between runs. Best-effort:
+        returns ``True`` on success, ``False`` if the request fails, and never
+        raises so it cannot abort a benchmark.
+        """
+        target = (model or self.model).strip()
+        if not target:
+            return False
+
+        payload = {"model": target, "keep_alive": 0}
+        try:
+            response = requests.post(
+                f"{self.base_url}/api/generate",
+                json=payload,
+                timeout=self.timeout_seconds,
+            )
+            response.raise_for_status()
+        except requests.RequestException:
+            return False
+        return True
+
 
 def _resolve_config_value(value: Any, field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():

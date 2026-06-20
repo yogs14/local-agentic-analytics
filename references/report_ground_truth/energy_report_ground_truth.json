@@ -1,0 +1,15 @@
+{
+  "report_id": "energy_analysis_report",
+  "required_chart_ids": [
+    "daily_active_power_trend",
+    "hourly_consumption_pattern",
+    "power_distribution",
+    "voltage_distribution",
+    "correlation_heatmap",
+    "sub_metering_comparison"
+  ],
+  "min_chart_count": 6,
+  "min_successful_insights": 1,
+  "require_tex_success": true,
+  "pdf_optional": true
+}

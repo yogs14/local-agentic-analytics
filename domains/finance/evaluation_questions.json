@@ -1,0 +1,68 @@
+[
+  {
+    "id": "F001",
+    "question": "Berapa rata-rata harga penutupan?",
+    "expected_unit": "USD",
+    "category": "average_close_price"
+  },
+  {
+    "id": "F002",
+    "question": "Berapa rata-rata harga penutupan pada tanggal 2024-01-05?",
+    "expected_unit": "USD",
+    "category": "average_close_price"
+  },
+  {
+    "id": "F003",
+    "question": "Berapa harga penutupan maksimum?",
+    "expected_unit": "USD",
+    "category": "maximum_close_price"
+  },
+  {
+    "id": "F004",
+    "question": "Berapa harga penutupan tertinggi pada tanggal 2024-01-09?",
+    "expected_unit": "USD",
+    "category": "maximum_close_price"
+  },
+  {
+    "id": "F005",
+    "question": "Berapa volume rata-rata?",
+    "expected_unit": "shares",
+    "category": "average_volume"
+  },
+  {
+    "id": "F006",
+    "question": "Berapa rata-rata volume pada tanggal 2024-01-08?",
+    "expected_unit": "shares",
+    "category": "average_volume"
+  },
+  {
+    "id": "F007",
+    "question": "Berapa return rata-rata?",
+    "expected_unit": "percent",
+    "category": "average_return"
+  },
+  {
+    "id": "F008",
+    "question": "Berapa rata-rata return pada tanggal 2024-01-10?",
+    "expected_unit": "percent",
+    "category": "average_return"
+  },
+  {
+    "id": "F009",
+    "question": "Berapa jumlah missing value pada kolom close_price?",
+    "expected_unit": "count",
+    "category": "missing_values"
+  },
+  {
+    "id": "F010",
+    "question": "Berapa jumlah missing value pada kolom volume?",
+    "expected_unit": "count",
+    "category": "missing_values"
+  },
+  {
+    "id": "F011",
+    "question": "Berapa jumlah missing value pada kolom return_pct?",
+    "expected_unit": "count",
+    "category": "missing_values"
+  }
+]

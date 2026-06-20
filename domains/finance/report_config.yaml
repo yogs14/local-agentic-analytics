@@ -1,0 +1,7 @@
+report:
+  enabled: false
+  title: Finance Report Placeholder
+  note: Report workflow untuk domain finance belum diimplementasikan pada tahap ini.
+
+sections: {}
+charts: []

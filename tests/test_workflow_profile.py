@@ -96,6 +96,29 @@ def test_workflow_passes_dataset_profile_context_to_sql_agent():
     assert "Dataset konsumsi listrik rumah tangga per menit" not in context
 
 
+def test_workflow_finance_domain_uses_finance_profile_and_rule_sql():
+    duckdb_tool = FakeDuckDBTool()
+    workflow = SequentialAnalyticsWorkflow(
+        domain="finance",
+        duckdb_tool=duckdb_tool,
+        sql_agent=CapturingSQLAgent(),
+        reporter_agent=FakeReporterAgent(),
+        audit_logger=NoopAuditLogger(),
+    )
+
+    state = workflow.run("Berapa rata-rata harga penutupan?")
+
+    assert state.success is True
+    assert workflow.table_name == "stock_prices"
+    assert workflow.dataset_profile.domain == "finance"
+    assert duckdb_tool.schema_table_names == ["stock_prices"]
+    assert state.generated_sql == (
+        "SELECT AVG(close_price) AS avg_close_price_usd\n"
+        "FROM stock_prices;"
+    )
+    assert state.route == "rule_based_sql"
+
+
 def test_workflow_accepts_manual_table_name_override():
     duckdb_tool = FakeDuckDBTool()
     custom_profile = DatasetProfile(

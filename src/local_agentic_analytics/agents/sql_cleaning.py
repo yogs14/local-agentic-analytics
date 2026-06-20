@@ -17,15 +17,34 @@ ENERGY_COLUMNS = (
 )
 
 
-def clean_sql_response(response: str, question: str | None = None) -> str:
-    """Remove common wrapping and normalize fragile DuckDB SQL patterns."""
+def clean_sql_response(
+    response: str,
+    question: str | None = None,
+    apply_domain_normalization: bool = True,
+) -> str:
+    """Remove common wrapping and normalize fragile DuckDB SQL patterns.
+
+    When ``apply_domain_normalization`` is ``False`` the markdown/code-fence
+    stripping, first-SELECT extraction, and ``normalize_common_duckdb_sql`` are
+    still applied, but ``normalize_energy_domain_sql`` is skipped so the raw
+    model SQL is preserved.
+    """
     sql = _extract_first_select_statement(response)
 
     sql = normalize_common_duckdb_sql(sql)
-    if question:
+    if question and apply_domain_normalization:
         sql = normalize_energy_domain_sql(sql, question)
 
     return _strip_trailing_markdown_artifacts(sql)
+
+
+def extract_raw_model_sql(response: str) -> str:
+    """Return model SQL after fence-strip and common normalization only.
+
+    This is the SQL before any domain-specific rewriting, used to measure raw
+    model quality independently of the deterministic normalizers.
+    """
+    return clean_sql_response(response, question=None, apply_domain_normalization=False)
 
 
 def _extract_first_select_statement(response: str) -> str:

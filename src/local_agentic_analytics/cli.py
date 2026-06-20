@@ -22,7 +22,7 @@ MISSING_DATABASE_MESSAGE = (
 )
 QA_ENGINES = ("custom", "langgraph")
 REPORT_ENGINES = ("custom", "langgraph")
-_LANGGRAPH_WORKFLOW_RUNNER: Callable[[str], AnalyticsState] | None = None
+_LANGGRAPH_WORKFLOW_RUNNER: Callable[..., AnalyticsState] | None = None
 _LANGGRAPH_REPORT_WORKFLOW_RUNNER: Callable[[str], dict] | None = None
 
 
@@ -35,12 +35,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     ask_parser = subparsers.add_parser(
         "ask",
-        help="Jalankan mode Q&A text-to-SQL untuk dataset energi.",
+        help="Jalankan mode Q&A text-to-SQL untuk dataset terpilih.",
     )
     ask_parser.add_argument(
         "question",
         nargs="+",
-        help="Pertanyaan analitik untuk tabel electric_power.",
+        help="Pertanyaan analitik untuk domain dataset.",
+    )
+    ask_parser.add_argument(
+        "--domain",
+        default="energy",
+        help="Domain dataset untuk Q&A. Default: energy.",
     )
     ask_parser.add_argument(
         "--engine",
@@ -73,7 +78,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "ask":
-        return run_ask(" ".join(args.question).strip(), engine=args.engine)
+        return run_ask(
+            " ".join(args.question).strip(),
+            engine=args.engine,
+            domain=args.domain,
+        )
     if args.command == "report" and args.report_type == "energy":
         return run_energy_report(engine=args.engine)
 
@@ -81,26 +90,35 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 2
 
 
-def run_ask(user_query: str, engine: str = "custom") -> int:
+def run_ask(user_query: str, engine: str = "custom", domain: str = "energy") -> int:
     if not user_query:
         print("Pertanyaan tidak boleh kosong.")
         return 1
     if engine not in QA_ENGINES:
         print(f"Engine tidak didukung: {engine}")
         return 1
+    if not domain or not domain.strip():
+        print("Domain tidak boleh kosong.")
+        return 1
+
+    domain = domain.strip()
 
     db_path = get_default_duckdb_path()
     if not db_path.exists():
-        print(MISSING_DATABASE_MESSAGE)
+        print(get_missing_database_message(domain))
         return 1
 
-    state = run_qa_workflow(user_query, engine)
-    append_run_log(state_to_run_log(state, engine=engine))
+    state = run_qa_workflow(user_query, engine, domain=domain)
+    append_run_log(state_to_run_log(state, engine=engine, domain=domain))
     print_qa_state(state)
     return 0 if state.success else 1
 
 
-def run_qa_workflow(user_query: str, engine: str) -> AnalyticsState:
+def run_qa_workflow(
+    user_query: str,
+    engine: str,
+    domain: str = "energy",
+) -> AnalyticsState:
     if engine == "langgraph":
         runner = _LANGGRAPH_WORKFLOW_RUNNER
         if runner is None:
@@ -108,9 +126,9 @@ def run_qa_workflow(user_query: str, engine: str) -> AnalyticsState:
                 run_langgraph_workflow as runner,
             )
 
-        return runner(user_query)
+        return runner(user_query, domain=domain)
 
-    workflow = SequentialAnalyticsWorkflow()
+    workflow = SequentialAnalyticsWorkflow(domain=domain)
     return workflow.run(user_query)
 
 
@@ -164,6 +182,16 @@ def get_default_duckdb_path() -> Path:
     if path.is_absolute():
         return path
     return PROJECT_ROOT / path
+
+
+def get_missing_database_message(domain: str) -> str:
+    if domain == "energy":
+        return MISSING_DATABASE_MESSAGE
+    return (
+        "Database belum ditemukan. Jalankan script ingestion untuk domain "
+        f"'{domain}' terlebih dahulu, misalnya python scripts/ingest_{domain}.py "
+        "jika tersedia."
+    )
 
 
 def print_qa_state(state: AnalyticsState) -> None:
@@ -273,9 +301,14 @@ def print_report_metadata(metadata: dict) -> None:
         print(f"pdf_error: {pdf_error}")
 
 
-def state_to_run_log(state: AnalyticsState, engine: str = "custom") -> dict:
+def state_to_run_log(
+    state: AnalyticsState,
+    engine: str = "custom",
+    domain: str = "energy",
+) -> dict:
     return {
         "engine": engine,
+        "domain": domain,
         "user_query": state.user_query,
         "generated_sql": state.generated_sql or "",
         "repaired_sql": state.repaired_sql or "",

@@ -13,6 +13,7 @@ class AnalyticsState:
     user_query: str
     schema: str | None = None
     generated_sql: str | None = None
+    raw_generated_sql: str | None = None
     repaired_sql: str | None = None
     sql_result: dict[str, Any] | None = None
     error_message: str | None = None

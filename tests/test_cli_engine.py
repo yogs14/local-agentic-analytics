@@ -18,6 +18,7 @@ def test_ask_parser_accepts_custom_engine_after_question():
     assert args.command == "ask"
     assert args.question == ["Berapa nilainya?"]
     assert args.engine == "custom"
+    assert args.domain == "energy"
 
 
 def test_ask_parser_accepts_langgraph_engine_after_question():
@@ -28,6 +29,31 @@ def test_ask_parser_accepts_langgraph_engine_after_question():
     assert args.command == "ask"
     assert args.question == ["Berapa nilainya?"]
     assert args.engine == "langgraph"
+    assert args.domain == "energy"
+
+
+def test_ask_parser_accepts_energy_domain_before_question():
+    parser = cli.build_parser()
+
+    args = parser.parse_args(["ask", "--domain", "energy", "Berapa nilainya?"])
+
+    assert args.command == "ask"
+    assert args.question == ["Berapa nilainya?"]
+    assert args.domain == "energy"
+    assert args.engine == "custom"
+
+
+def test_ask_parser_accepts_finance_domain_before_question():
+    parser = cli.build_parser()
+
+    args = parser.parse_args(
+        ["ask", "--domain", "finance", "Berapa rata-rata harga penutupan?"]
+    )
+
+    assert args.command == "ask"
+    assert args.question == ["Berapa rata-rata harga penutupan?"]
+    assert args.domain == "finance"
+    assert args.engine == "custom"
 
 
 def test_report_parser_defaults_to_custom_engine():

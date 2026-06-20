@@ -17,6 +17,7 @@ from local_agentic_analytics.agents.rule_based_sql_resolver import (
 )
 from local_agentic_analytics.agents.sql_agent import SQLAgent
 from local_agentic_analytics.core.config import PROJECT_ROOT, load_config
+from local_agentic_analytics.core.pipeline_toggles import PipelineToggles
 from local_agentic_analytics.core.dataset_profile import (
     DatasetProfile,
     load_dataset_profile,
@@ -56,12 +57,14 @@ class SequentialAnalyticsWorkflow:
         max_report_rows: int = DEFAULT_MAX_REPORT_ROWS,
         domain_adapter: DomainAdapter | None = None,
         audit_logger: ToolAuditLogger | None = None,
+        toggles: PipelineToggles | None = None,
     ):
         if table_name is not None and not table_name.strip():
             raise ValueError("table_name must not be empty")
         if max_report_rows < 1:
             raise ValueError("max_report_rows must be greater than 0")
 
+        self.toggles = toggles or PipelineToggles()
         self.domain = domain.strip() if domain else "energy"
         self.domain_adapter = domain_adapter
         self.dataset_profile = dataset_profile or load_dataset_profile(self.domain)
@@ -79,11 +82,14 @@ class SequentialAnalyticsWorkflow:
         self.sql_agent = sql_agent or SQLAgent(
             dataset_profile_context=self.dataset_profile_context,
             domain_adapter=self.domain_adapter,
+            apply_domain_normalization=self.toggles.apply_domain_normalization,
         )
         self.rule_based_sql_resolver = (
             rule_based_sql_resolver or RuleBasedSQLResolver()
         )
-        self.repair_agent = repair_agent or SQLRepairAgent()
+        self.repair_agent = repair_agent or SQLRepairAgent(
+            apply_domain_normalization=self.toggles.apply_domain_normalization,
+        )
         self.reporter_agent = reporter_agent or ReporterAgent()
         self.table_name = resolved_table_name.strip()
         self.max_report_rows = max_report_rows
@@ -104,19 +110,25 @@ class SequentialAnalyticsWorkflow:
                 lambda: self.duckdb_tool.get_schema(self.table_name),
                 input_summary=f"table_name={self.table_name}",
             )
-            resolved_sql = self._run_step(
-                state,
-                "rule_based_sql_resolution",
-                "rule_based_sql_resolver",
-                "resolve",
-                "rule_based_sql_resolver.resolve",
-                lambda: self.rule_based_sql_resolver.resolve(
-                    question=state.user_query,
-                    dataset_profile=self.dataset_profile,
-                ),
-                input_summary=f"question={state.user_query}",
-                status_from_result=lambda result: "success" if result else "no_match",
-            )
+            if self.toggles.use_rule_based_resolver:
+                resolved_sql = self._run_step(
+                    state,
+                    "rule_based_sql_resolution",
+                    "rule_based_sql_resolver",
+                    "resolve",
+                    "rule_based_sql_resolver.resolve",
+                    lambda: self.rule_based_sql_resolver.resolve(
+                        question=state.user_query,
+                        dataset_profile=self.dataset_profile,
+                    ),
+                    input_summary=f"question={state.user_query}",
+                    status_from_result=lambda result: (
+                        "success" if result else "no_match"
+                    ),
+                )
+            else:
+                resolved_sql = None
+
             if resolved_sql:
                 state.generated_sql = resolved_sql
                 state.route = "rule_based_sql"
@@ -139,20 +151,24 @@ class SequentialAnalyticsWorkflow:
                         self.sql_agent
                     ),
                 )
+                state.raw_generated_sql = getattr(
+                    self.sql_agent, "last_raw_generated_sql", None
+                )
 
             try:
-                self._run_step(
-                    state,
-                    "sql_semantic_validation",
-                    "sql_semantic_guard",
-                    "validate",
-                    "sql_semantic_guard.validate",
-                    lambda: self._validate_sql_semantics(
-                        state.user_query,
-                        state.generated_sql or "",
-                    ),
-                    input_summary=state.generated_sql or "",
-                )
+                if self.toggles.use_semantic_guard:
+                    self._run_step(
+                        state,
+                        "sql_semantic_validation",
+                        "sql_semantic_guard",
+                        "validate",
+                        "sql_semantic_guard.validate",
+                        lambda: self._validate_sql_semantics(
+                            state.user_query,
+                            state.generated_sql or "",
+                        ),
+                        input_summary=state.generated_sql or "",
+                    )
                 result_df = self._run_step(
                     state,
                     "sql_execution",
@@ -164,6 +180,8 @@ class SequentialAnalyticsWorkflow:
                 )
             except Exception as exc:
                 state.error_message = str(exc)
+                if not self.toggles.use_repair:
+                    raise
                 state.route = f"{state.route or 'unknown'}_with_repair"
                 state.repaired_sql = self._run_step(
                     state,
@@ -184,18 +202,19 @@ class SequentialAnalyticsWorkflow:
                         self.repair_agent
                     ),
                 )
-                self._run_step(
-                    state,
-                    "repair_semantic_validation",
-                    "sql_semantic_guard",
-                    "validate_repaired",
-                    "sql_semantic_guard.validate_repaired",
-                    lambda: self._validate_sql_semantics(
-                        state.user_query,
-                        state.repaired_sql or "",
-                    ),
-                    input_summary=state.repaired_sql or "",
-                )
+                if self.toggles.use_semantic_guard:
+                    self._run_step(
+                        state,
+                        "repair_semantic_validation",
+                        "sql_semantic_guard",
+                        "validate_repaired",
+                        "sql_semantic_guard.validate_repaired",
+                        lambda: self._validate_sql_semantics(
+                            state.user_query,
+                            state.repaired_sql or "",
+                        ),
+                        input_summary=state.repaired_sql or "",
+                    )
                 result_df = self._run_step(
                     state,
                     "repair_execution",

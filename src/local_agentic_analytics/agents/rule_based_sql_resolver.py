@@ -25,12 +25,10 @@ INDONESIAN_MONTHS = {
 
 
 class RuleBasedSQLResolver:
-    """Resolve frequent energy questions into deterministic DuckDB SQL."""
+    """Resolve frequent low-risk questions into deterministic DuckDB SQL."""
 
     def resolve(self, question: str, dataset_profile: DatasetProfile) -> str | None:
         if not question or not question.strip():
-            return None
-        if dataset_profile.domain.lower() != "energy":
             return None
 
         normalized_question = _normalize_text(question)
@@ -41,6 +39,27 @@ class RuleBasedSQLResolver:
             return None
 
         parsed_date = _parse_date(question)
+        if _is_missing_value_question(normalized_question):
+            return _resolve_missing_value_question(
+                question=question,
+                normalized_question=normalized_question,
+                dataset_profile=dataset_profile,
+                table_name=table_name,
+            )
+
+        domain = dataset_profile.domain.lower()
+        if domain == "finance":
+            return _resolve_finance_question(
+                normalized_question=normalized_question,
+                dataset_profile=dataset_profile,
+                table_name=table_name,
+                datetime_column=datetime_column,
+                parsed_date=parsed_date,
+            )
+
+        if domain != "energy":
+            return None
+
         if _is_average_active_power_question(normalized_question):
             if not parsed_date or "Global_active_power" not in dataset_profile.columns:
                 return None
@@ -59,17 +78,115 @@ class RuleBasedSQLResolver:
                 f"WHERE CAST({datetime_column} AS DATE) = DATE '{parsed_date}';"
             )
 
-        if _is_missing_value_question(normalized_question):
-            column_name = _find_mentioned_column(question, dataset_profile)
-            if column_name is None:
-                return None
-            alias = f"missing_{_alias_column_name(column_name)}_count"
-            return (
-                f"SELECT COUNT(*) FILTER (WHERE {column_name} IS NULL) AS {alias}\n"
-                f"FROM {table_name};"
-            )
-
         return None
+
+
+def _resolve_finance_question(
+    normalized_question: str,
+    dataset_profile: DatasetProfile,
+    table_name: str,
+    datetime_column: str,
+    parsed_date: str | None,
+) -> str | None:
+    if _is_average_close_price_question(normalized_question):
+        if "close_price" not in dataset_profile.columns:
+            return None
+        return _build_aggregate_sql(
+            expression="AVG(close_price)",
+            alias="avg_close_price_usd",
+            table_name=table_name,
+            datetime_column=datetime_column,
+            parsed_date=parsed_date,
+        )
+
+    if _is_max_close_price_question(normalized_question):
+        if "close_price" not in dataset_profile.columns:
+            return None
+        return _build_aggregate_sql(
+            expression="MAX(close_price)",
+            alias="max_close_price_usd",
+            table_name=table_name,
+            datetime_column=datetime_column,
+            parsed_date=parsed_date,
+        )
+
+    if _is_average_volume_question(normalized_question):
+        if "volume" not in dataset_profile.columns:
+            return None
+        return _build_aggregate_sql(
+            expression="AVG(volume)",
+            alias="avg_volume_shares",
+            table_name=table_name,
+            datetime_column=datetime_column,
+            parsed_date=parsed_date,
+        )
+
+    if _is_average_return_question(normalized_question):
+        if "return_pct" not in dataset_profile.columns:
+            return None
+        return _build_aggregate_sql(
+            expression="AVG(return_pct)",
+            alias="avg_return_pct",
+            table_name=table_name,
+            datetime_column=datetime_column,
+            parsed_date=parsed_date,
+        )
+
+    return None
+
+
+def _resolve_missing_value_question(
+    question: str,
+    normalized_question: str,
+    dataset_profile: DatasetProfile,
+    table_name: str,
+) -> str | None:
+    column_name = _find_mentioned_column(question, dataset_profile)
+    if column_name is None:
+        if "kolom" in normalized_question or "column" in normalized_question:
+            return None
+        return _build_all_missing_values_sql(dataset_profile, table_name)
+
+    alias = f"missing_{_alias_column_name(column_name)}_count"
+    return (
+        f"SELECT COUNT(*) FILTER (WHERE {column_name} IS NULL) AS {alias}\n"
+        f"FROM {table_name};"
+    )
+
+
+def _build_aggregate_sql(
+    expression: str,
+    alias: str,
+    table_name: str,
+    datetime_column: str,
+    parsed_date: str | None,
+) -> str:
+    sql = f"SELECT {expression} AS {alias}\nFROM {table_name}"
+    if parsed_date:
+        sql += f"\nWHERE CAST({datetime_column} AS DATE) = DATE '{parsed_date}'"
+    return f"{sql};"
+
+
+def _build_all_missing_values_sql(
+    dataset_profile: DatasetProfile,
+    table_name: str,
+) -> str | None:
+    columns = [
+        column_name
+        for column_name, column in dataset_profile.columns.items()
+        if column.type.lower() != "date"
+    ]
+    if not columns:
+        return None
+
+    select_items = [
+        (
+            f"COUNT(*) FILTER (WHERE {column_name} IS NULL) "
+            f"AS missing_{_alias_column_name(column_name)}_count"
+        )
+        for column_name in columns
+    ]
+    return "SELECT " + ", ".join(select_items) + f"\nFROM {table_name};"
 
 
 def _is_average_active_power_question(text: str) -> bool:
@@ -87,6 +204,39 @@ def _is_total_energy_question(text: str) -> bool:
 
 def _is_missing_value_question(text: str) -> bool:
     return "missing value" in text or "nilai hilang" in text
+
+
+def _is_average_close_price_question(text: str) -> bool:
+    return _has_average(text) and (
+        "harga penutupan" in text or "close price" in text or "close_price" in text
+    )
+
+
+def _is_max_close_price_question(text: str) -> bool:
+    return _has_maximum(text) and (
+        "harga penutupan" in text or "close price" in text or "close_price" in text
+    )
+
+
+def _is_average_volume_question(text: str) -> bool:
+    return _has_average(text) and "volume" in text
+
+
+def _is_average_return_question(text: str) -> bool:
+    return _has_average(text) and (
+        "return" in text or "return_pct" in text or "imbal hasil" in text
+    )
+
+
+def _has_average(text: str) -> bool:
+    return "rata rata" in text or "rata-rata" in text or "average" in text
+
+
+def _has_maximum(text: str) -> bool:
+    return any(
+        phrase in text
+        for phrase in ("maksimum", "maximum", "tertinggi", "paling tinggi", "max")
+    )
 
 
 def _parse_date(text: str) -> str | None:

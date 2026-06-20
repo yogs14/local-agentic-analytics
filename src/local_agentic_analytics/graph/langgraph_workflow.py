@@ -253,6 +253,13 @@ class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
         graph_state: _LangGraphWorkflowState,
     ) -> _LangGraphWorkflowState:
         state = _get_analytics_state(graph_state)
+        if not self.toggles.use_rule_based_resolver:
+            state.route = "llm_sql"
+            return {
+                **graph_state,
+                "analytics_state": state,
+                "has_rule_based_sql": False,
+            }
         try:
             resolved_sql = self._run_step(
                 state,
@@ -303,6 +310,9 @@ class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
                     self.sql_agent
                 ),
             )
+            state.raw_generated_sql = getattr(
+                self.sql_agent, "last_raw_generated_sql", None
+            )
             return {**graph_state, "analytics_state": state}
         except Exception as exc:
             return self._mark_finalize_error(graph_state, exc)
@@ -312,6 +322,12 @@ class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
         graph_state: _LangGraphWorkflowState,
     ) -> _LangGraphWorkflowState:
         state = _get_analytics_state(graph_state)
+        if not self.toggles.use_semantic_guard:
+            return {
+                **graph_state,
+                "analytics_state": state,
+                "needs_repair": False,
+            }
         try:
             self._run_step(
                 state,
@@ -409,18 +425,19 @@ class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
     ) -> _LangGraphWorkflowState:
         state = _get_analytics_state(graph_state)
         try:
-            self._run_step(
-                state,
-                "semantic_validate_repaired_sql",
-                "sql_semantic_guard",
-                "validate_repaired",
-                "sql_semantic_guard.validate_repaired",
-                lambda: self._validate_sql_semantics(
-                    state.user_query,
-                    state.repaired_sql or "",
-                ),
-                input_summary=state.repaired_sql or "",
-            )
+            if self.toggles.use_semantic_guard:
+                self._run_step(
+                    state,
+                    "semantic_validate_repaired_sql",
+                    "sql_semantic_guard",
+                    "validate_repaired",
+                    "sql_semantic_guard.validate_repaired",
+                    lambda: self._validate_sql_semantics(
+                        state.user_query,
+                        state.repaired_sql or "",
+                    ),
+                    input_summary=state.repaired_sql or "",
+                )
             result_df = self._run_step(
                 state,
                 "execute_repaired_sql",
@@ -529,7 +546,7 @@ class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
         if graph_state.get("should_finalize"):
             return "finalize"
         if graph_state.get("needs_repair"):
-            return "repair_sql"
+            return "repair_sql" if self.toggles.use_repair else "finalize"
         return "execute_sql"
 
     def _route_after_sql_execution(
@@ -539,7 +556,7 @@ class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
         if graph_state.get("should_finalize"):
             return "finalize"
         if graph_state.get("needs_repair"):
-            return "repair_sql"
+            return "repair_sql" if self.toggles.use_repair else "finalize"
         return "generate_answer"
 
     def _route_after_repair(

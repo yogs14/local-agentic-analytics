@@ -124,17 +124,42 @@ def profile_to_compact_sql_context(profile: DatasetProfile) -> str:
     if units:
         lines.append(f"important_units: {units}")
 
-    lines.extend(
-        [
-            "sql_rules:",
-            "- AVG(Global_active_power) AS avg_global_active_power_kw",
-            "- SUM(Global_active_power) / 60.0 AS total_energy_kwh",
-            f"- {missing_value_count}",
-            f"- {date_filter}",
-        ]
-    )
+    lines.append("sql_rules:")
+    for column in profile.columns.values():
+        for rule_name, rule_value in column.rules.items():
+            lines.append(f"- {column.name}.{rule_name}: {rule_value}")
+        for rule_sql, rule_alias in _iter_sql_alias_pairs(column.rules):
+            lines.append(f"- {rule_sql} AS {rule_alias}")
+    for rule_name, rule_value in profile.sql_rules.items():
+        lines.append(f"- {rule_name}: {rule_value}")
+    if "missing_value_count" not in profile.sql_rules:
+        lines.append(f"- {missing_value_count}")
+    if "date_filter" not in profile.sql_rules:
+        lines.append(f"- {date_filter}")
 
     return "\n".join(lines).strip()
+
+
+def _iter_sql_alias_pairs(rules: dict[str, str]) -> list[tuple[str, str]]:
+    pairs = []
+    for rule_name, rule_value in rules.items():
+        if not rule_name.endswith("_sql"):
+            continue
+        base_name = rule_name[:-4]
+        alias_candidates = [f"{base_name}_alias"]
+        if "_" in base_name:
+            alias_candidates.append(f"{base_name.rsplit('_', 1)[0]}_alias")
+        alias_value = next(
+            (
+                rules[candidate]
+                for candidate in alias_candidates
+                if candidate in rules
+            ),
+            None,
+        )
+        if alias_value:
+            pairs.append((rule_value, alias_value))
+    return pairs
 
 
 def _parse_dataset_profile(raw_profile: dict[str, Any], profile_path: Path) -> DatasetProfile:

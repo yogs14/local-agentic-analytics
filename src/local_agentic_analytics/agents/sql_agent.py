@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from local_agentic_analytics.agents.sql_cleaning import clean_sql_response
+from local_agentic_analytics.agents.sql_cleaning import (
+    clean_sql_response,
+    extract_raw_model_sql,
+)
 from local_agentic_analytics.domain.adapters import DomainAdapter
 from local_agentic_analytics.prompts.sql_prompt import build_sql_prompt
 from local_agentic_analytics.tools.ollama_tool import OllamaTool
@@ -19,6 +22,7 @@ class SQLAgent:
         domain_adapter: DomainAdapter | None = None,
         dataset_profile_context: str | None = None,
         debug_prompt_length: bool = False,
+        apply_domain_normalization: bool = True,
     ):
         if temperature < 0:
             raise ValueError("temperature must be non-negative")
@@ -32,6 +36,10 @@ class SQLAgent:
         self.domain_adapter = domain_adapter
         self.dataset_profile_context = dataset_profile_context
         self.debug_prompt_length = debug_prompt_length
+        self.apply_domain_normalization = apply_domain_normalization
+        # Raw model SQL (fence-strip + common normalization, no domain rewrite)
+        # from the most recent generation, for faithful ablation analysis.
+        self.last_raw_generated_sql: str | None = None
 
     def generate_sql(
         self,
@@ -55,7 +63,12 @@ class SQLAgent:
             temperature=self.temperature,
             max_tokens=self.max_tokens,
         )
-        sql = clean_sql_response(response, question=question)
+        self.last_raw_generated_sql = extract_raw_model_sql(response)
+        sql = clean_sql_response(
+            response,
+            question=question,
+            apply_domain_normalization=self.apply_domain_normalization,
+        )
 
         if not sql:
             raise RuntimeError("SQL agent returned an empty response")

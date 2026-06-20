@@ -36,6 +36,19 @@ def test_load_dataset_profile_reads_energy_profile():
     )
 
 
+def test_load_dataset_profile_reads_finance_profile():
+    profile = load_dataset_profile("finance")
+
+    assert profile.name == "synthetic_stock_prices"
+    assert profile.domain == "finance"
+    assert profile.table_name == "stock_prices"
+    assert profile.datetime_column == "date"
+    assert profile.sampling_frequency == "daily"
+    assert profile.columns["close_price"].unit == "USD"
+    assert profile.columns["volume"].unit == "shares"
+    assert profile.columns["return_pct"].unit == "percent"
+
+
 def test_profile_to_prompt_context_contains_domain_semantics():
     profile = load_dataset_profile()
     context = profile_to_prompt_context(profile)
@@ -63,6 +76,25 @@ def test_profile_to_compact_sql_context_keeps_only_sql_essentials():
     assert "CAST(datetime AS DATE) = DATE 'YYYY-MM-DD'" in context
     assert "Dataset konsumsi listrik rumah tangga per menit" not in context
     assert "Daya aktif global rata-rata dalam kilowatt" not in context
+
+
+def test_finance_compact_sql_context_uses_finance_table_and_rules():
+    profile = load_dataset_profile("finance")
+    context = profile_to_compact_sql_context(profile)
+
+    assert "table_name: stock_prices" in context
+    assert "datetime_column: date" in context
+    assert "available_columns: date, close_price, volume, return_pct" in context
+    assert "close_price=USD" in context
+    assert "volume=shares" in context
+    assert "return_pct=percent" in context
+    assert "AVG(close_price) AS avg_close_price_usd" in context
+    assert "MAX(close_price) AS max_close_price_usd" in context
+    assert "AVG(volume) AS avg_volume_shares" in context
+    assert "AVG(return_pct) AS avg_return_pct" in context
+    assert "CAST(date AS DATE) = DATE 'YYYY-MM-DD'" in context
+    assert "electric_power" not in context
+    assert "Global_active_power" not in context
 
 
 def test_load_dataset_profile_raises_for_missing_domain(tmp_path, monkeypatch):

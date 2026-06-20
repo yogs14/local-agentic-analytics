@@ -15,6 +15,7 @@ class SQLRepairAgent:
         ollama_tool: OllamaTool | None = None,
         temperature: float = 0.0,
         max_tokens: int = 96,
+        apply_domain_normalization: bool = True,
     ):
         if temperature < 0:
             raise ValueError("temperature must be non-negative")
@@ -25,6 +26,7 @@ class SQLRepairAgent:
         self.temperature = temperature
         # SQL repair stays short because the expected output is one SQL query.
         self.max_tokens = max_tokens
+        self.apply_domain_normalization = apply_domain_normalization
 
     def repair_sql(
         self,
@@ -53,7 +55,11 @@ class SQLRepairAgent:
             temperature=self.temperature,
             max_tokens=self.max_tokens,
         )
-        sql = clean_sql_response(response, question=user_question)
+        sql = clean_sql_response(
+            response,
+            question=user_question,
+            apply_domain_normalization=self.apply_domain_normalization,
+        )
 
         if not sql:
             raise RuntimeError("SQL repair agent returned an empty response")

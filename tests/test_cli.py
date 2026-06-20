@@ -12,6 +12,9 @@ from local_agentic_analytics.core.state import AnalyticsState
 
 
 class FakeWorkflow:
+    def __init__(self, domain: str = "energy"):
+        self.domain = domain
+
     def run(self, user_query: str) -> AnalyticsState:
         return AnalyticsState(
             user_query=user_query,
@@ -90,7 +93,7 @@ def test_cli_ask_prints_expected_sections(tmp_path, monkeypatch, capsys):
     db_path = tmp_path / "analytics.duckdb"
     db_path.write_bytes(b"duckdb placeholder")
     monkeypatch.setattr(cli, "get_default_duckdb_path", lambda: db_path)
-    monkeypatch.setattr(cli, "SequentialAnalyticsWorkflow", lambda: FakeWorkflow())
+    monkeypatch.setattr(cli, "SequentialAnalyticsWorkflow", FakeWorkflow)
     monkeypatch.setattr(cli, "append_run_log", lambda log: None)
 
     exit_code = cli.main(["ask", "Berapa", "nilainya?"])
@@ -114,7 +117,7 @@ def test_cli_ask_can_select_langgraph_engine(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "_LANGGRAPH_WORKFLOW_RUNNER",
-        lambda user_query: created.append(user_query)
+        lambda user_query, domain="energy": created.append((user_query, domain))
         or FakeWorkflow().run(user_query),
     )
     monkeypatch.setattr(cli, "append_run_log", lambda log: None)
@@ -123,7 +126,7 @@ def test_cli_ask_can_select_langgraph_engine(tmp_path, monkeypatch, capsys):
 
     output = capsys.readouterr().out
     assert exit_code == 0
-    assert created == ["Berapa nilainya?"]
+    assert created == [("Berapa nilainya?", "energy")]
     assert "Final answer:" in output
     assert "Status: sukses" in output
 
@@ -136,7 +139,7 @@ def test_cli_ask_run_log_includes_engine(tmp_path, monkeypatch):
     monkeypatch.setattr(
         cli,
         "_LANGGRAPH_WORKFLOW_RUNNER",
-        lambda user_query: FakeWorkflow().run(user_query),
+        lambda user_query, domain="energy": FakeWorkflow(domain=domain).run(user_query),
     )
     monkeypatch.setattr(cli, "append_run_log", logs.append)
 
@@ -144,6 +147,56 @@ def test_cli_ask_run_log_includes_engine(tmp_path, monkeypatch):
 
     assert exit_code == 0
     assert logs[0]["engine"] == "langgraph"
+    assert logs[0]["domain"] == "energy"
+
+
+def test_cli_ask_passes_domain_to_custom_workflow(tmp_path, monkeypatch):
+    db_path = tmp_path / "analytics.duckdb"
+    db_path.write_bytes(b"duckdb placeholder")
+    created_domains = []
+
+    def workflow_factory(domain="energy"):
+        created_domains.append(domain)
+        return FakeWorkflow(domain=domain)
+
+    monkeypatch.setattr(cli, "get_default_duckdb_path", lambda: db_path)
+    monkeypatch.setattr(cli, "SequentialAnalyticsWorkflow", workflow_factory)
+    monkeypatch.setattr(cli, "append_run_log", lambda log: None)
+
+    exit_code = cli.main(
+        ["ask", "--domain", "finance", "Berapa", "rata-rata", "harga", "penutupan?"]
+    )
+
+    assert exit_code == 0
+    assert created_domains == ["finance"]
+
+
+def test_cli_ask_passes_domain_to_langgraph_workflow(tmp_path, monkeypatch):
+    db_path = tmp_path / "analytics.duckdb"
+    db_path.write_bytes(b"duckdb placeholder")
+    calls = []
+
+    def fake_runner(user_query, domain="energy"):
+        calls.append((user_query, domain))
+        return FakeWorkflow(domain=domain).run(user_query)
+
+    monkeypatch.setattr(cli, "get_default_duckdb_path", lambda: db_path)
+    monkeypatch.setattr(cli, "_LANGGRAPH_WORKFLOW_RUNNER", fake_runner)
+    monkeypatch.setattr(cli, "append_run_log", lambda log: None)
+
+    exit_code = cli.main(
+        [
+            "ask",
+            "--domain",
+            "finance",
+            "--engine",
+            "langgraph",
+            "Berapa rata-rata harga penutupan?",
+        ]
+    )
+
+    assert exit_code == 0
+    assert calls == [("Berapa rata-rata harga penutupan?", "finance")]
 
 
 def test_cli_ask_prints_clear_message_when_database_missing(tmp_path, monkeypatch, capsys):

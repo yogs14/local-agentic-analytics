@@ -76,42 +76,55 @@ def test_resolver_returns_none_when_rule_or_date_does_not_match():
     )
 
 
-def test_resolver_generates_finance_average_close_price_sql():
+def test_resolver_generates_finance_average_close_sql():
     resolver = RuleBasedSQLResolver()
     profile = load_dataset_profile("finance")
 
     sql = resolver.resolve("Berapa rata-rata harga penutupan?", profile)
 
     assert sql == (
-        "SELECT AVG(close_price) AS avg_close_price_usd\n"
+        "SELECT AVG(close) AS avg_close_usd\n"
         "FROM stock_prices;"
     )
 
 
-def test_resolver_generates_finance_average_close_price_sql_with_date():
+def test_resolver_generates_finance_average_close_sql_with_date():
     resolver = RuleBasedSQLResolver()
     profile = load_dataset_profile("finance")
 
     sql = resolver.resolve(
-        "Berapa rata-rata harga penutupan pada tanggal 2024-01-05?",
+        "Berapa rata-rata harga penutupan pada tanggal 2019-06-03?",
         profile,
     )
 
     assert sql == (
-        "SELECT AVG(close_price) AS avg_close_price_usd\n"
+        "SELECT AVG(close) AS avg_close_usd\n"
         "FROM stock_prices\n"
-        "WHERE CAST(date AS DATE) = DATE '2024-01-05';"
+        "WHERE CAST(date AS DATE) = DATE '2019-06-03';"
     )
 
 
-def test_resolver_generates_finance_max_close_price_sql():
+def test_resolver_generates_finance_average_close_sql_with_ticker():
+    resolver = RuleBasedSQLResolver()
+    profile = load_dataset_profile("finance")
+
+    sql = resolver.resolve("Berapa rata-rata harga penutupan NVDA?", profile)
+
+    assert sql == (
+        "SELECT AVG(close) AS avg_close_usd\n"
+        "FROM stock_prices\n"
+        "WHERE ticker = 'NVDA';"
+    )
+
+
+def test_resolver_generates_finance_max_close_sql():
     resolver = RuleBasedSQLResolver()
     profile = load_dataset_profile("finance")
 
     sql = resolver.resolve("Berapa harga penutupan maksimum?", profile)
 
     assert sql == (
-        "SELECT MAX(close_price) AS max_close_price_usd\n"
+        "SELECT MAX(close) AS max_close_usd\n"
         "FROM stock_prices;"
     )
 
@@ -128,30 +141,18 @@ def test_resolver_generates_finance_average_volume_sql():
     )
 
 
-def test_resolver_generates_finance_average_return_sql():
-    resolver = RuleBasedSQLResolver()
-    profile = load_dataset_profile("finance")
-
-    sql = resolver.resolve("Berapa return rata-rata?", profile)
-
-    assert sql == (
-        "SELECT AVG(return_pct) AS avg_return_pct\n"
-        "FROM stock_prices;"
-    )
-
-
 def test_resolver_generates_finance_missing_value_sql_when_column_is_named():
     resolver = RuleBasedSQLResolver()
     profile = load_dataset_profile("finance")
 
     sql = resolver.resolve(
-        "Berapa jumlah missing value pada kolom close_price?",
+        "Berapa jumlah missing value pada kolom close?",
         profile,
     )
 
     assert sql == (
-        "SELECT COUNT(*) FILTER (WHERE close_price IS NULL) "
-        "AS missing_close_price_count\n"
+        "SELECT COUNT(*) FILTER (WHERE close IS NULL) "
+        "AS missing_close_count\n"
         "FROM stock_prices;"
     )
 
@@ -163,9 +164,11 @@ def test_resolver_generates_finance_all_missing_value_sql_without_named_column()
     sql = resolver.resolve("Berapa jumlah missing value?", profile)
 
     assert sql == (
-        "SELECT COUNT(*) FILTER (WHERE close_price IS NULL) "
-        "AS missing_close_price_count, "
-        "COUNT(*) FILTER (WHERE volume IS NULL) AS missing_volume_count, "
-        "COUNT(*) FILTER (WHERE return_pct IS NULL) AS missing_return_pct_count\n"
+        "SELECT COUNT(*) FILTER (WHERE ticker IS NULL) AS missing_ticker_count, "
+        "COUNT(*) FILTER (WHERE open IS NULL) AS missing_open_count, "
+        "COUNT(*) FILTER (WHERE high IS NULL) AS missing_high_count, "
+        "COUNT(*) FILTER (WHERE low IS NULL) AS missing_low_count, "
+        "COUNT(*) FILTER (WHERE close IS NULL) AS missing_close_count, "
+        "COUNT(*) FILTER (WHERE volume IS NULL) AS missing_volume_count\n"
         "FROM stock_prices;"
     )

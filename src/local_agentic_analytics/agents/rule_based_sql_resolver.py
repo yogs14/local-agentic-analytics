@@ -81,6 +81,9 @@ class RuleBasedSQLResolver:
         return None
 
 
+FINANCE_TICKERS = ("NVDA", "NFLX", "TSLA", "GOOGL")
+
+
 def _resolve_finance_question(
     normalized_question: str,
     dataset_profile: DatasetProfile,
@@ -88,48 +91,42 @@ def _resolve_finance_question(
     datetime_column: str,
     parsed_date: str | None,
 ) -> str | None:
+    ticker = _find_ticker(normalized_question)
+
     if _is_average_close_price_question(normalized_question):
-        if "close_price" not in dataset_profile.columns:
+        if "close" not in dataset_profile.columns:
             return None
-        return _build_aggregate_sql(
-            expression="AVG(close_price)",
-            alias="avg_close_price_usd",
+        return _build_finance_aggregate_sql(
+            expression="AVG(close)",
+            alias="avg_close_usd",
             table_name=table_name,
             datetime_column=datetime_column,
             parsed_date=parsed_date,
+            ticker=ticker,
         )
 
     if _is_max_close_price_question(normalized_question):
-        if "close_price" not in dataset_profile.columns:
+        if "close" not in dataset_profile.columns:
             return None
-        return _build_aggregate_sql(
-            expression="MAX(close_price)",
-            alias="max_close_price_usd",
+        return _build_finance_aggregate_sql(
+            expression="MAX(close)",
+            alias="max_close_usd",
             table_name=table_name,
             datetime_column=datetime_column,
             parsed_date=parsed_date,
+            ticker=ticker,
         )
 
     if _is_average_volume_question(normalized_question):
         if "volume" not in dataset_profile.columns:
             return None
-        return _build_aggregate_sql(
+        return _build_finance_aggregate_sql(
             expression="AVG(volume)",
             alias="avg_volume_shares",
             table_name=table_name,
             datetime_column=datetime_column,
             parsed_date=parsed_date,
-        )
-
-    if _is_average_return_question(normalized_question):
-        if "return_pct" not in dataset_profile.columns:
-            return None
-        return _build_aggregate_sql(
-            expression="AVG(return_pct)",
-            alias="avg_return_pct",
-            table_name=table_name,
-            datetime_column=datetime_column,
-            parsed_date=parsed_date,
+            ticker=ticker,
         )
 
     return None
@@ -154,17 +151,31 @@ def _resolve_missing_value_question(
     )
 
 
-def _build_aggregate_sql(
+def _build_finance_aggregate_sql(
     expression: str,
     alias: str,
     table_name: str,
     datetime_column: str,
     parsed_date: str | None,
+    ticker: str | None,
 ) -> str:
-    sql = f"SELECT {expression} AS {alias}\nFROM {table_name}"
+    conditions: list[str] = []
+    if ticker:
+        conditions.append(f"ticker = '{ticker}'")
     if parsed_date:
-        sql += f"\nWHERE CAST({datetime_column} AS DATE) = DATE '{parsed_date}'"
+        conditions.append(f"CAST({datetime_column} AS DATE) = DATE '{parsed_date}'")
+
+    sql = f"SELECT {expression} AS {alias}\nFROM {table_name}"
+    if conditions:
+        sql += "\nWHERE " + " AND ".join(conditions)
     return f"{sql};"
+
+
+def _find_ticker(text: str) -> str | None:
+    for ticker in FINANCE_TICKERS:
+        if re.search(rf"\b{ticker.lower()}\b", text):
+            return ticker
+    return None
 
 
 def _build_all_missing_values_sql(
@@ -220,12 +231,6 @@ def _is_max_close_price_question(text: str) -> bool:
 
 def _is_average_volume_question(text: str) -> bool:
     return _has_average(text) and "volume" in text
-
-
-def _is_average_return_question(text: str) -> bool:
-    return _has_average(text) and (
-        "return" in text or "return_pct" in text or "imbal hasil" in text
-    )
 
 
 def _has_average(text: str) -> bool:

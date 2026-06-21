@@ -37,6 +37,44 @@ Narasi analisis:
 """
 
 
+FINANCE_INSIGHT_PROMPT_TEMPLATE = """Anda adalah analis data keuangan pasar saham.
+
+Tugas:
+Tuliskan narasi analisis singkat dalam bahasa Indonesia formal akademik
+berdasarkan metadata grafik dan statistik ringkas yang diberikan.
+
+Aturan:
+- Gunakan hanya angka dan informasi yang tersedia pada stats.
+- Jangan mengarang angka di luar stats yang diberikan.
+- Jangan menyebut kesimpulan yang tidak didukung data.
+- Gunakan satuan yang benar:
+  - Harga (open, high, low, close) = USD.
+  - Volume = lembar saham (shares).
+  - Return harian = persen (%).
+  - Korelasi tidak memiliki satuan.
+- Sebut ticker (NVDA, NFLX, TSLA, GOOGL) secara eksplisit jika relevan.
+- Jika data tidak cukup untuk menyimpulkan anomali, tulis bahwa perlu pembanding historis.
+- Jangan menulis markdown table.
+- Output berupa 1-2 paragraf pendek.
+
+Metadata grafik:
+- chart_id: {chart_id}
+- chart_title: {chart_title}
+- chart_path: {chart_path}
+
+Stats:
+{stats}
+
+Narasi analisis:
+"""
+
+
+_INSIGHT_TEMPLATES = {
+    "energy": INSIGHT_PROMPT_TEMPLATE,
+    "finance": FINANCE_INSIGHT_PROMPT_TEMPLATE,
+}
+
+
 def build_insight_prompt(chart_context: dict[str, Any]) -> str:
     required_keys = ["chart_id", "chart_title", "chart_path", "stats"]
     missing_keys = [
@@ -51,8 +89,11 @@ def build_insight_prompt(chart_context: dict[str, Any]) -> str:
     if not isinstance(stats, dict) or not stats:
         raise ValueError("stats must be a non-empty dict")
 
+    domain = str(chart_context.get("domain", "energy")).strip().lower()
+    template = _INSIGHT_TEMPLATES.get(domain, INSIGHT_PROMPT_TEMPLATE)
+
     formatted_stats = json.dumps(stats, ensure_ascii=False, indent=2)
-    return INSIGHT_PROMPT_TEMPLATE.format(
+    return template.format(
         chart_id=str(chart_context["chart_id"]).strip(),
         chart_title=str(chart_context["chart_title"]).strip(),
         chart_path=str(chart_context["chart_path"]).strip(),

@@ -26,6 +26,7 @@ from local_agentic_analytics.core.dataset_profile import (
 )
 from local_agentic_analytics.core.state import AnalyticsState
 from local_agentic_analytics.domain.adapters import DomainAdapter
+from local_agentic_analytics.domain.registry import get_domain_adapter
 from local_agentic_analytics.evaluation.audit_logger import (
     ToolAuditLogger,
     summarize_value,
@@ -66,7 +67,13 @@ class SequentialAnalyticsWorkflow:
 
         self.toggles = toggles or PipelineToggles()
         self.domain = domain.strip() if domain else "energy"
-        self.domain_adapter = domain_adapter
+        # Energy returns None here (prompt path unchanged); finance auto-loads
+        # its adapter so the domain few-shots reach the SQL agent.
+        self.domain_adapter = (
+            domain_adapter
+            if domain_adapter is not None
+            else get_domain_adapter(self.domain)
+        )
         self.dataset_profile = dataset_profile or load_dataset_profile(self.domain)
         self.full_dataset_profile_context = profile_to_prompt_context(
             self.dataset_profile

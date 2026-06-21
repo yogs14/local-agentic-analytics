@@ -50,6 +50,14 @@ class SQLAgent:
         """Generate a SQL string only."""
         profile_context = dataset_profile_context or self.dataset_profile_context
 
+        if self.domain_adapter is not None:
+            adapter_context = self.domain_adapter.format_sql_prompt_context()
+            profile_context = (
+                f"{profile_context}\n\n{adapter_context}"
+                if profile_context
+                else adapter_context
+            )
+
         prompt = build_sql_prompt(
             question=question,
             schema=schema,

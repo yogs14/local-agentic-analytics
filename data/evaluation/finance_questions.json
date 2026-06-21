@@ -1,0 +1,107 @@
+[
+  {
+    "id": "FQ01",
+    "question": "Berapa rata-rata harga penutupan NVDA antara 2 Januari 2019 dan 31 Januari 2019?",
+    "category": "aggregation",
+    "expected_source": "sql",
+    "expected_unit": "USD"
+  },
+  {
+    "id": "FQ02",
+    "question": "Berapa harga penutupan tertinggi TSLA selama periode dataset?",
+    "category": "aggregation",
+    "expected_source": "sql",
+    "expected_unit": "USD"
+  },
+  {
+    "id": "FQ03",
+    "question": "Berapa harga penutupan terendah GOOGL selama periode dataset?",
+    "category": "aggregation",
+    "expected_source": "sql",
+    "expected_unit": "USD"
+  },
+  {
+    "id": "FQ04",
+    "question": "Berapa volume perdagangan rata-rata NFLX selama periode dataset?",
+    "category": "aggregation",
+    "expected_source": "sql",
+    "expected_unit": "shares"
+  },
+  {
+    "id": "FQ05",
+    "question": "Berapa jumlah hari perdagangan NVDA pada tahun 2019?",
+    "category": "count",
+    "expected_source": "sql",
+    "expected_unit": "count"
+  },
+  {
+    "id": "FQ06",
+    "question": "Berapa rata-rata harga penutupan TSLA antara 1 Januari 2020 dan 10 Juni 2020?",
+    "category": "aggregation",
+    "expected_source": "sql",
+    "expected_unit": "USD"
+  },
+  {
+    "id": "FQ07",
+    "question": "Berapa harga penutupan tertinggi GOOGL antara 1 Januari 2019 dan 31 Maret 2019?",
+    "category": "aggregation",
+    "expected_source": "sql",
+    "expected_unit": "USD"
+  },
+  {
+    "id": "FQ08",
+    "question": "Berapa rata-rata harga penutupan NVDA pada tanggal 3 Juni 2019?",
+    "category": "filter",
+    "expected_source": "sql",
+    "expected_unit": "USD"
+  },
+  {
+    "id": "FQ09",
+    "question": "Bagaimana sentimen berita terbaru tentang TSLA?",
+    "category": "news_sentiment",
+    "expected_source": "rag",
+    "expected_unit": "text"
+  },
+  {
+    "id": "FQ10",
+    "question": "Berita analis apa saja yang muncul terkait NVDA?",
+    "category": "analyst_activity",
+    "expected_source": "rag",
+    "expected_unit": "text"
+  },
+  {
+    "id": "FQ11",
+    "question": "Publisher mana yang paling sering memberitakan NFLX?",
+    "category": "publisher_focus",
+    "expected_source": "rag",
+    "expected_unit": "text"
+  },
+  {
+    "id": "FQ12",
+    "question": "Apa saja kabar penting seputar GOOGL menurut headline berita?",
+    "category": "news_sentiment",
+    "expected_source": "rag",
+    "expected_unit": "text"
+  },
+  {
+    "id": "FQ13",
+    "question": "Ringkas pergerakan harga NVDA pada Juni 2019 dan kaitkan dengan beritanya.",
+    "category": "price_news_fusion",
+    "expected_source": "hybrid",
+    "expected_unit": "mixed"
+  },
+  {
+    "id": "FQ14",
+    "question": "Bagaimana performa harga TSLA pada awal 2020 dan apa berita pendukungnya?",
+    "category": "price_news_fusion",
+    "expected_source": "hybrid",
+    "expected_unit": "mixed"
+  },
+  {
+    "id": "FQ15",
+    "question": "Jelaskan tren harga GOOGL pada Q1 2019 beserta berita yang relevan.",
+    "category": "price_news_fusion",
+    "expected_source": "hybrid",
+    "expected_unit": "mixed"
+  }
+]

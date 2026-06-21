@@ -20,6 +20,7 @@ def main() -> int:
         load_dotenv(env_path, override=True)
 
     db_path = _get_duckdb_path()
+    finance_news_csv = PROJECT_ROOT / "data" / "raw" / "finance" / "raw_analyst_ratings.csv"
     checks = [
         ("env_file", ".env tersedia", env_path.exists()),
         ("ollama_base_url", "OLLAMA_BASE_URL tersedia", bool(os.getenv("OLLAMA_BASE_URL"))),
@@ -29,6 +30,21 @@ def main() -> int:
             "electric_power_table",
             "Tabel electric_power tersedia",
             _table_exists(db_path, "electric_power") if db_path.exists() else False,
+        ),
+        (
+            "stock_prices_table",
+            "Tabel stock_prices (finance) tersedia",
+            _table_exists(db_path, "stock_prices") if db_path.exists() else False,
+        ),
+        (
+            "finance_news_csv",
+            "data/raw/finance/raw_analyst_ratings.csv tersedia",
+            finance_news_csv.exists(),
+        ),
+        (
+            "finance_news_collection",
+            "Koleksi ChromaDB finance_news berisi dokumen",
+            _chromadb_collection_has_documents("finance_news"),
         ),
         (
             "reports_figures",
@@ -60,6 +76,15 @@ def main() -> int:
             print("- Buat .env dari .env.example: Copy-Item .env.example .env")
         if "duckdb_database" in failed or "electric_power_table" in failed:
             print("- Jalankan ingestion: python scripts/ingest_energy.py")
+        if "stock_prices_table" in failed:
+            print("- Jalankan ingestion finance: python scripts/ingest_finance_prices.py")
+        if "finance_news_collection" in failed:
+            print("- Jalankan ingestion berita: python scripts/ingest_finance_news.py")
+        if "finance_news_csv" in failed:
+            print(
+                "- Letakkan raw_analyst_ratings.csv di data/raw/finance/ "
+                "sebelum ingestion berita."
+            )
         return 1
 
     print()
@@ -78,6 +103,39 @@ def _get_duckdb_path() -> Path:
         return path
 
     return PROJECT_ROOT / path
+
+
+def _chromadb_collection_has_documents(collection_name: str) -> bool:
+    try:
+        from local_agentic_analytics.tools.chromadb_tool import (
+            DEFAULT_EMBEDDING_MODEL,
+            DEFAULT_PERSIST_DIRECTORY,
+            ChromaDBTool,
+        )
+
+        config = load_config("chromadb.yaml")
+        chroma_config = config.get("chromadb", {}) if isinstance(config, dict) else {}
+        embedding_config = (
+            config.get("embedding", {}) if isinstance(config, dict) else {}
+        )
+        persist_directory = Path(
+            str(chroma_config.get("persist_directory", DEFAULT_PERSIST_DIRECTORY))
+        )
+        if not persist_directory.is_absolute():
+            persist_directory = PROJECT_ROOT / persist_directory
+        if not persist_directory.exists():
+            return False
+
+        tool = ChromaDBTool(
+            persist_directory=persist_directory,
+            collection_name=collection_name,
+            embedding_model_name=str(
+                embedding_config.get("model", DEFAULT_EMBEDDING_MODEL)
+            ),
+        )
+        return tool.count() > 0
+    except Exception:
+        return False
 
 
 def _table_exists(db_path: Path, table_name: str) -> bool:

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "F001",
+    "question": "Berapa rata-rata harga penutupan NVDA antara 2 Januari 2019 dan 31 Januari 2019?",
+    "gold_sql_file": "references/sql_gold/F001.sql",
+    "expected_unit": "USD"
+  },
+  {
+    "id": "F002",
+    "question": "Berapa harga penutupan tertinggi TSLA selama periode dataset?",
+    "gold_sql_file": "references/sql_gold/F002.sql",
+    "expected_unit": "USD"
+  },
+  {
+    "id": "F003",
+    "question": "Berapa harga penutupan terendah GOOGL selama periode dataset?",
+    "gold_sql_file": "references/sql_gold/F003.sql",
+    "expected_unit": "USD"
+  },
+  {
+    "id": "F004",
+    "question": "Berapa volume perdagangan rata-rata NFLX selama periode dataset?",
+    "gold_sql_file": "references/sql_gold/F004.sql",
+    "expected_unit": "shares"
+  },
+  {
+    "id": "F005",
+    "question": "Berapa jumlah hari perdagangan NVDA pada tahun 2019?",
+    "gold_sql_file": "references/sql_gold/F005.sql",
+    "expected_unit": "count"
+  },
+  {
+    "id": "F006",
+    "question": "Berapa rata-rata harga penutupan TSLA antara 1 Januari 2020 dan 10 Juni 2020?",
+    "gold_sql_file": "references/sql_gold/F006.sql",
+    "expected_unit": "USD"
+  },
+  {
+    "id": "F007",
+    "question": "Berapa harga penutupan tertinggi GOOGL antara 1 Januari 2019 dan 31 Maret 2019?",
+    "gold_sql_file": "references/sql_gold/F007.sql",
+    "expected_unit": "USD"
+  },
+  {
+    "id": "F008",
+    "question": "Berapa rata-rata harga penutupan NVDA pada tanggal 3 Juni 2019?",
+    "gold_sql_file": "references/sql_gold/F008.sql",
+    "expected_unit": "USD"
+  }
+]

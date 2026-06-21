@@ -151,8 +151,17 @@ class ChromaDBTool:
             "ids": new_ids,
         }
 
-    def query(self, text: str, top_k: int = 3) -> list[dict[str, Any]]:
-        """Query the collection and return compact ranked matches."""
+    def query(
+        self,
+        text: str,
+        top_k: int = 3,
+        where: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Query the collection and return compact ranked matches.
+
+        ``where`` is an optional ChromaDB metadata filter, e.g.
+        ``{"ticker": "NVDA"}``, used to scope retrieval to one document group.
+        """
         if not text or not text.strip():
             raise ValueError("text must not be empty")
         if top_k < 1:
@@ -160,10 +169,14 @@ class ChromaDBTool:
         if self.count() == 0:
             return []
 
-        result = self.collection.query(
-            query_texts=[text.strip()],
-            n_results=top_k,
-        )
+        query_kwargs: dict[str, Any] = {
+            "query_texts": [text.strip()],
+            "n_results": top_k,
+        }
+        if where:
+            query_kwargs["where"] = where
+
+        result = self.collection.query(**query_kwargs)
         return _flatten_query_result(result)
 
     @staticmethod

@@ -4,7 +4,7 @@ model:
   name: ${OLLAMA_MODEL}
   temperature: 0.0
   context_window: 2048
-  num_gpu: 0
+  num_gpu: 999
   timeout_seconds: 120
   keep_alive: 30m
 

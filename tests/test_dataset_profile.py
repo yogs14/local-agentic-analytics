@@ -39,14 +39,15 @@ def test_load_dataset_profile_reads_energy_profile():
 def test_load_dataset_profile_reads_finance_profile():
     profile = load_dataset_profile("finance")
 
-    assert profile.name == "synthetic_stock_prices"
+    assert profile.name == "sp500_analyst_ratings"
     assert profile.domain == "finance"
     assert profile.table_name == "stock_prices"
     assert profile.datetime_column == "date"
     assert profile.sampling_frequency == "daily"
-    assert profile.columns["close_price"].unit == "USD"
+    assert profile.columns["ticker"].semantic_type == "ticker_symbol"
+    assert profile.columns["close"].unit == "USD"
+    assert profile.columns["open"].unit == "USD"
     assert profile.columns["volume"].unit == "shares"
-    assert profile.columns["return_pct"].unit == "percent"
 
 
 def test_profile_to_prompt_context_contains_domain_semantics():
@@ -84,14 +85,14 @@ def test_finance_compact_sql_context_uses_finance_table_and_rules():
 
     assert "table_name: stock_prices" in context
     assert "datetime_column: date" in context
-    assert "available_columns: date, close_price, volume, return_pct" in context
-    assert "close_price=USD" in context
+    assert (
+        "available_columns: date, ticker, open, high, low, close, volume" in context
+    )
+    assert "close=USD" in context
     assert "volume=shares" in context
-    assert "return_pct=percent" in context
-    assert "AVG(close_price) AS avg_close_price_usd" in context
-    assert "MAX(close_price) AS max_close_price_usd" in context
+    assert "AVG(close) AS avg_close_usd" in context
+    assert "MAX(close) AS max_close_usd" in context
     assert "AVG(volume) AS avg_volume_shares" in context
-    assert "AVG(return_pct) AS avg_return_pct" in context
     assert "CAST(date AS DATE) = DATE 'YYYY-MM-DD'" in context
     assert "electric_power" not in context
     assert "Global_active_power" not in context

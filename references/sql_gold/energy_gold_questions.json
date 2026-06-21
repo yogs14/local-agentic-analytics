@@ -30,33 +30,45 @@
     "expected_unit": "V"
   },
   {
-    "id": "E006",
+    "id": "E007",
     "question": "Berapa daya aktif maksimum pada tanggal 16 Desember 2006?",
-    "gold_sql_file": "references/sql_gold/E006.sql",
+    "gold_sql_file": "references/sql_gold/E007.sql",
     "expected_unit": "kW"
   },
   {
-    "id": "E007",
+    "id": "E009",
     "question": "Pada jam berapa konsumsi daya aktif tertinggi terjadi pada tanggal 16 Desember 2006?",
-    "gold_sql_file": "references/sql_gold/E007.sql",
+    "gold_sql_file": "references/sql_gold/E009.sql",
     "expected_unit": "timestamp"
   },
   {
-    "id": "E008",
-    "question": "Berapa rata-rata Sub_metering_1, Sub_metering_2, dan Sub_metering_3 pada tanggal 16 Desember 2006?",
-    "gold_sql_file": "references/sql_gold/E008.sql",
+    "id": "E011",
+    "question": "Berapa rata-rata Sub_metering_1 pada tanggal 16 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E011.sql",
     "expected_unit": "Wh"
   },
   {
-    "id": "E009",
+    "id": "E012",
+    "question": "Berapa rata-rata Sub_metering_2 pada tanggal 16 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E012.sql",
+    "expected_unit": "Wh"
+  },
+  {
+    "id": "E013",
+    "question": "Berapa rata-rata Sub_metering_3 pada tanggal 16 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E013.sql",
+    "expected_unit": "Wh"
+  },
+  {
+    "id": "E018",
     "question": "Berapa jumlah missing value pada kolom Global_active_power?",
-    "gold_sql_file": "references/sql_gold/E009.sql",
+    "gold_sql_file": "references/sql_gold/E018.sql",
     "expected_unit": "count"
   },
   {
-    "id": "E010",
+    "id": "E020",
     "question": "Berapa jumlah record pada tanggal 16 Desember 2006?",
-    "gold_sql_file": "references/sql_gold/E010.sql",
+    "gold_sql_file": "references/sql_gold/E020.sql",
     "expected_unit": "records"
   }
 ]

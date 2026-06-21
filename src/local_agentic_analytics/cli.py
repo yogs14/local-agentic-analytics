@@ -10,6 +10,10 @@ from typing import Callable, Sequence
 from local_agentic_analytics.core.config import PROJECT_ROOT, load_config
 from local_agentic_analytics.core.state import AnalyticsState
 from local_agentic_analytics.evaluation.logger import append_run_log
+from local_agentic_analytics.graph.finance_report_workflow import (
+    DEFAULT_TEX_PATH as DEFAULT_FINANCE_TEX_PATH,
+    FinanceReportWorkflow,
+)
 from local_agentic_analytics.graph.report_workflow import (
     DEFAULT_DB_PATH as DEFAULT_REPORT_DB_PATH,
     EnergyReportWorkflow,
@@ -60,7 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     report_parser.add_argument(
         "report_type",
-        choices=["energy"],
+        choices=["energy", "finance"],
         help="Jenis laporan yang akan dibuat.",
     )
     report_parser.add_argument(
@@ -85,6 +89,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     if args.command == "report" and args.report_type == "energy":
         return run_energy_report(engine=args.engine)
+    if args.command == "report" and args.report_type == "finance":
+        return run_finance_report(engine=args.engine)
 
     parser.error("Unsupported command")
     return 2
@@ -144,6 +150,33 @@ def run_energy_report(engine: str = "custom") -> int:
 
     metadata = run_report_workflow(engine=engine, db_path=db_path)
     metadata = normalize_report_metadata(metadata, engine=engine)
+    print_report_metadata(metadata)
+
+    return 0 if metadata.get("tex_success") else 1
+
+
+def run_finance_report(engine: str = "custom") -> int:
+    if engine not in REPORT_ENGINES:
+        print(f"Engine report tidak didukung: {engine}")
+        return 1
+    if engine == "langgraph":
+        print(
+            "Report finance hanya mendukung engine custom pada tahap ini. "
+            "Gunakan --engine custom."
+        )
+        return 1
+
+    db_path = DEFAULT_REPORT_DB_PATH
+    if not db_path.exists():
+        print(
+            "Database belum ditemukan. Jalankan python scripts/ingest_finance_prices.py "
+            "terlebih dahulu."
+        )
+        return 1
+
+    workflow = FinanceReportWorkflow(db_path=db_path)
+    metadata = workflow.run()
+    metadata = normalize_report_metadata(metadata, engine="custom")
     print_report_metadata(metadata)
 
     return 0 if metadata.get("tex_success") else 1
@@ -244,7 +277,8 @@ def print_qa_state(state: AnalyticsState) -> None:
 
 
 def print_report_metadata(metadata: dict) -> None:
-    print("Energy report:")
+    domain = str(metadata.get("domain") or "energy").capitalize()
+    print(f"{domain} report:")
     print(f"- engine: {metadata.get('engine') or 'custom'}")
     print(f"- success: {bool(metadata.get('success'))}")
     print(f"- tex_success: {bool(metadata.get('tex_success'))}")

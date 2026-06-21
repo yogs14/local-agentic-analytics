@@ -111,9 +111,10 @@ def test_workflow_finance_domain_uses_finance_profile_and_rule_sql():
     assert state.success is True
     assert workflow.table_name == "stock_prices"
     assert workflow.dataset_profile.domain == "finance"
+    assert workflow.dataset_profile.name == "sp500_analyst_ratings"
     assert duckdb_tool.schema_table_names == ["stock_prices"]
     assert state.generated_sql == (
-        "SELECT AVG(close_price) AS avg_close_price_usd\n"
+        "SELECT AVG(close) AS avg_close_usd\n"
         "FROM stock_prices;"
     )
     assert state.route == "rule_based_sql"

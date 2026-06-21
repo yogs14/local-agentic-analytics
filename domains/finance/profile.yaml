@@ -1,10 +1,10 @@
 dataset:
-  name: synthetic_stock_prices
+  name: sp500_analyst_ratings
   domain: finance
   table_name: stock_prices
   datetime_column: date
   sampling_frequency: daily
-  description: Dataset harga saham harian sintetis untuk membuktikan workflow Q&A lintas domain.
+  description: Dataset harga saham harian (yfinance) untuk membuktikan workflow Q&A lintas domain dan konektivitas hybrid DuckDB + ChromaDB.
 
 columns:
   date:
@@ -12,35 +12,54 @@ columns:
     semantic_type: trade_date
     description: Tanggal perdagangan.
 
-  close_price:
+  ticker:
+    type: string
+    semantic_type: ticker_symbol
+    description: Simbol ticker saham (NVDA, NFLX, TSLA, GOOGL).
+
+  open:
+    type: numeric
+    unit: USD
+    semantic_type: open_price
+    description: Harga pembukaan harian dalam USD.
+
+  high:
+    type: numeric
+    unit: USD
+    semantic_type: high_price
+    description: Harga tertinggi harian dalam USD.
+
+  low:
+    type: numeric
+    unit: USD
+    semantic_type: low_price
+    description: Harga terendah harian dalam USD.
+
+  close:
     type: numeric
     unit: USD
     semantic_type: closing_price
-    description: Harga penutupan harian.
+    description: Harga penutupan harian dalam USD.
     rules:
-      average_sql: AVG(close_price)
-      maximum_sql: MAX(close_price)
-      average_alias: avg_close_price_usd
-      maximum_alias: max_close_price_usd
+      average_sql: AVG(close)
+      maximum_sql: MAX(close)
+      minimum_sql: MIN(close)
+      average_alias: avg_close_usd
+      maximum_alias: max_close_usd
+      minimum_alias: min_close_usd
 
   volume:
     type: numeric
     unit: shares
     semantic_type: trading_volume
-    description: Volume perdagangan harian.
+    description: Volume perdagangan harian dalam jumlah lembar saham.
     rules:
       average_sql: AVG(volume)
       average_alias: avg_volume_shares
 
-  return_pct:
-    type: numeric
-    unit: percent
-    semantic_type: daily_return
-    description: Return harian dalam persen.
-    rules:
-      average_sql: AVG(return_pct)
-      average_alias: avg_return_pct
-
 sql_rules:
   date_filter: "CAST(date AS DATE) = DATE 'YYYY-MM-DD'"
+  average_close: "AVG(close) AS avg_close_usd"
+  price_change: "close - LAG(close) OVER (ORDER BY date) AS price_change_usd"
   missing_value_count: "COUNT(*) FILTER (WHERE <column> IS NULL)"
+  ticker_filter: "WHERE ticker = 'TICKER'"

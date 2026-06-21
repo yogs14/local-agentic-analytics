@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import calendar
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
@@ -10,10 +12,19 @@ from typing import Any, Callable, TypeVar
 
 import pandas as pd
 
+from local_agentic_analytics.agents.planner_agent import PlannerAgent
 from local_agentic_analytics.agents.repair_agent import SQLRepairAgent
 from local_agentic_analytics.agents.reporter_agent import ReporterAgent
+from local_agentic_analytics.agents.route_types import RouteDecision
+from local_agentic_analytics.agents.rule_based_route_resolver import (
+    RuleBasedRouteResolver,
+)
 from local_agentic_analytics.agents.rule_based_sql_resolver import (
+    INDONESIAN_MONTHS,
     RuleBasedSQLResolver,
+    _find_ticker,
+    _normalize_text,
+    _parse_date,
 )
 from local_agentic_analytics.agents.sql_agent import SQLAgent
 from local_agentic_analytics.core.config import PROJECT_ROOT, load_config
@@ -31,6 +42,10 @@ from local_agentic_analytics.evaluation.audit_logger import (
     ToolAuditLogger,
     summarize_value,
 )
+from local_agentic_analytics.tools.chromadb_tool import (
+    DEFAULT_PERSIST_DIRECTORY,
+    ChromaDBTool,
+)
 from local_agentic_analytics.tools.duckdb_tool import DuckDBTool
 from local_agentic_analytics.tools.sql_semantic_guard import (
     validate_energy_sql_semantics,
@@ -40,6 +55,10 @@ from local_agentic_analytics.tools.sql_semantic_guard import (
 T = TypeVar("T")
 DEFAULT_TABLE_NAME = "electric_power"
 DEFAULT_MAX_REPORT_ROWS = 20
+DEFAULT_RAG_TOP_K = 5
+NEWS_COLLECTION_NAME = "finance_news"
+# Marker handed to the reporter when no SQL was executed (RAG-only answer).
+NO_SQL_MARKER = "-- RAG retrieval finance_news (tanpa SQL)"
 
 
 class SequentialAnalyticsWorkflow:
@@ -59,6 +78,11 @@ class SequentialAnalyticsWorkflow:
         domain_adapter: DomainAdapter | None = None,
         audit_logger: ToolAuditLogger | None = None,
         toggles: PipelineToggles | None = None,
+        rule_based_route_resolver: RuleBasedRouteResolver | None = None,
+        planner_agent: PlannerAgent | None = None,
+        chroma_tool: ChromaDBTool | None = None,
+        news_collection_name: str = NEWS_COLLECTION_NAME,
+        rag_top_k: int = DEFAULT_RAG_TOP_K,
     ):
         if table_name is not None and not table_name.strip():
             raise ValueError("table_name must not be empty")
@@ -102,12 +126,40 @@ class SequentialAnalyticsWorkflow:
         self.max_report_rows = max_report_rows
         self.audit_logger = audit_logger or ToolAuditLogger()
 
+        # Planner dependencies. The rule-based resolver is pure and cheap, so it
+        # is built eagerly. The LLM planner and ChromaDB tool are built lazily so
+        # the energy path (and tests that never reach them) pay nothing.
+        self.rule_based_route_resolver = (
+            rule_based_route_resolver or RuleBasedRouteResolver()
+        )
+        self._planner_agent = planner_agent
+        self._chroma_tool = chroma_tool
+        self.news_collection_name = news_collection_name
+        self.rag_top_k = rag_top_k
+
     def run(self, user_query: str) -> AnalyticsState:
         """Execute the full sequential workflow and return the final state."""
         state = AnalyticsState(user_query=user_query)
         total_start = perf_counter()
 
         try:
+            planned_route = self._plan_route(state)
+            if planned_route is RouteDecision.RAG_NEWS:
+                self._run_rag_news(state)
+                state.success = True
+                return state
+            if planned_route is RouteDecision.HYBRID:
+                if self._run_hybrid(state):
+                    state.success = True
+                    return state
+                # Hybrid could not run fully; it already recorded a safe degrade
+                # target on the state. Honour RAG here; otherwise fall through to
+                # the unchanged STRUCTURED_SQL path below.
+                if state.planned_route == RouteDecision.RAG_NEWS.value:
+                    self._run_rag_news(state)
+                    state.success = True
+                    return state
+
             state.schema = self._run_step(
                 state,
                 "schema",
@@ -262,6 +314,219 @@ class SequentialAnalyticsWorkflow:
             return state
         finally:
             state.latency["total"] = perf_counter() - total_start
+
+    def _plan_route(self, state: AnalyticsState) -> RouteDecision:
+        """Decide the retrieval route, recording the decision on the state.
+
+        This is the first node whose downstream target is chosen by reasoning
+        (deterministic resolver first, LLM planner second) rather than a computed
+        flag. It never raises: any failure degrades to STRUCTURED_SQL.
+        """
+        domain = (self.dataset_profile.domain or self.domain or "").lower()
+
+        # Energy (and any non-finance domain) is forced to SQL without invoking
+        # the planner at all, keeping that path byte-identical to before.
+        if domain != "finance":
+            state.planned_route = RouteDecision.STRUCTURED_SQL.value
+            state.route_source = "forced_energy"
+            state.route_reasoning = "Domain non-finance selalu STRUCTURED_SQL."
+            return RouteDecision.STRUCTURED_SQL
+
+        try:
+            resolution = self._run_step(
+                state,
+                "route_planning",
+                "planner",
+                "route",
+                "planner.route",
+                lambda: self.rule_based_route_resolver.resolve(
+                    state.user_query,
+                    domain=domain,
+                ),
+                input_summary=f"question={state.user_query}",
+                status_from_result=lambda result: (
+                    "success" if result is not None else "no_match"
+                ),
+            )
+        except Exception as exc:  # pragma: no cover - resolver is pure.
+            return self._default_route(state, f"Resolver gagal: {exc}")
+
+        if resolution.confident and resolution.route is not RouteDecision.STRUCTURED_SQL:
+            state.planned_route = resolution.route.value
+            state.route_source = "rule_based"
+            state.route_reasoning = resolution.reasoning
+            return resolution.route
+
+        # Resolver only reached STRUCTURED_SQL (ambiguous). Consult the LLM
+        # planner when enabled; otherwise stay with the rule-based decision.
+        if not self.toggles.use_planner:
+            state.planned_route = resolution.route.value
+            state.route_source = "rule_based"
+            state.route_reasoning = resolution.reasoning
+            return resolution.route
+
+        try:
+            route = self._run_step(
+                state,
+                "route_planning_llm",
+                "ollama",
+                "planning",
+                "ollama.planning",
+                lambda: self._get_planner_agent().plan_route(state.user_query),
+                input_summary=f"question={state.user_query}",
+                ollama_action="planning",
+                ollama_metrics_provider=lambda: _collect_ollama_metrics(
+                    self._get_planner_agent()
+                ),
+            )
+        except Exception as exc:
+            return self._default_route(state, f"Planner LLM gagal: {exc}")
+
+        state.planned_route = route.value
+        state.route_source = "llm"
+        state.route_reasoning = "Keputusan LLM planner."
+        return route
+
+    def _default_route(self, state: AnalyticsState, reason: str) -> RouteDecision:
+        state.planned_route = RouteDecision.STRUCTURED_SQL.value
+        state.route_source = "default"
+        state.route_reasoning = reason
+        return RouteDecision.STRUCTURED_SQL
+
+    def _run_rag_news(self, state: AnalyticsState) -> None:
+        """Retrieve finance news headlines and answer from them (no SQL)."""
+        question = state.user_query
+        chroma_tool = self._get_chroma_tool()
+        matches = self._run_step(
+            state,
+            "rag_retrieval",
+            "chromadb",
+            "query",
+            "chromadb.query",
+            lambda: chroma_tool.query(text=question, top_k=self.rag_top_k),
+            input_summary=f"top_k={self.rag_top_k} | {question}",
+        )
+        headlines = _headlines_from_matches(matches)
+        state.retrieved_context = headlines
+        state.route = "rag_news"
+        state.final_answer = self._run_step(
+            state,
+            "reporting",
+            "ollama",
+            "reporting",
+            "ollama.reporting",
+            lambda: self.reporter_agent.generate_answer(
+                question=question,
+                sql=NO_SQL_MARKER,
+                query_result={"retrieved_headlines": headlines},
+            ),
+            input_summary=NO_SQL_MARKER,
+            ollama_action="reporting",
+            ollama_metrics_provider=lambda: _collect_ollama_metrics(
+                self.reporter_agent
+            ),
+        )
+
+    def _run_hybrid(self, state: AnalyticsState) -> bool:
+        """Fuse a DuckDB price summary with ChromaDB news into one answer.
+
+        Returns True when the full hybrid ran. When the ticker or date range
+        cannot be extracted it records a safe degrade target on the state and
+        returns False instead of crashing.
+        """
+        question = state.user_query
+        ticker = _find_ticker(_normalize_text(question))
+        date_range = _extract_date_range(question)
+
+        if not ticker or not date_range:
+            target = (
+                RouteDecision.RAG_NEWS if ticker else RouteDecision.STRUCTURED_SQL
+            )
+            state.planned_route = target.value
+            state.route_reasoning = (
+                f"{state.route_reasoning} | Degradasi HYBRID->{target.value}: "
+                "ticker/tanggal tidak lengkap."
+            ).strip(" |")
+            return False
+
+        start, end = date_range
+        sql = self._build_hybrid_summary_sql(ticker, start, end)
+        result_df = self._run_step(
+            state,
+            "hybrid_price_summary",
+            "duckdb",
+            "query",
+            "duckdb.query",
+            lambda: self.duckdb_tool.execute_query(sql),
+            input_summary=sql,
+        )
+        sql_result = dataframe_to_compact_result(
+            result_df, max_rows=self.max_report_rows
+        )
+        matches = self._run_step(
+            state,
+            "hybrid_news_retrieval",
+            "chromadb",
+            "query",
+            "chromadb.query",
+            lambda: self._get_chroma_tool().query(
+                text=f"berita {ticker} {start} {end}",
+                top_k=self.rag_top_k,
+                where={"ticker": ticker},
+            ),
+            input_summary=f"ticker={ticker} | top_k={self.rag_top_k}",
+        )
+        headlines = _headlines_from_matches(matches)
+
+        state.generated_sql = sql
+        state.sql_result = sql_result
+        state.retrieved_context = headlines
+        state.route = "hybrid"
+        state.final_answer = self._run_step(
+            state,
+            "reporting",
+            "ollama",
+            "reporting",
+            "ollama.reporting",
+            lambda: self.reporter_agent.generate_answer(
+                question=question,
+                sql=sql,
+                query_result={
+                    "price_summary": sql_result,
+                    "retrieved_headlines": headlines,
+                },
+            ),
+            input_summary=sql,
+            ollama_action="reporting",
+            ollama_metrics_provider=lambda: _collect_ollama_metrics(
+                self.reporter_agent
+            ),
+        )
+        return True
+
+    def _build_hybrid_summary_sql(self, ticker: str, start: str, end: str) -> str:
+        datetime_column = self.dataset_profile.datetime_column
+        return (
+            "SELECT\n"
+            "    MIN(close) AS min_close_usd,\n"
+            "    AVG(close) AS avg_close_usd,\n"
+            "    MAX(close) AS max_close_usd,\n"
+            "    COUNT(*) AS trading_days\n"
+            f"FROM {self.table_name}\n"
+            f"WHERE ticker = '{ticker}'\n"
+            f"  AND CAST({datetime_column} AS DATE) "
+            f"BETWEEN DATE '{start}' AND DATE '{end}';"
+        )
+
+    def _get_planner_agent(self) -> PlannerAgent:
+        if self._planner_agent is None:
+            self._planner_agent = PlannerAgent()
+        return self._planner_agent
+
+    def _get_chroma_tool(self) -> ChromaDBTool:
+        if self._chroma_tool is None:
+            self._chroma_tool = _build_news_chroma_tool(self.news_collection_name)
+        return self._chroma_tool
 
     def _validate_sql_semantics(self, question: str, sql: str) -> str:
         if self.dataset_profile.domain.lower() != "energy":
@@ -422,6 +687,96 @@ def _load_default_db_path() -> Path:
         return path
 
     return PROJECT_ROOT / path
+
+
+def _headlines_from_matches(
+    matches: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    """Flatten ChromaDB matches into compact headline records for the reporter."""
+    headlines: list[dict[str, str]] = []
+    for match in matches:
+        metadata = match.get("metadata") or {}
+        headlines.append(
+            {
+                "headline": str(match.get("document", "")),
+                "ticker": str(metadata.get("ticker", "")),
+                "date": str(metadata.get("date", "")),
+                "publisher": str(metadata.get("publisher", "")),
+            }
+        )
+    return headlines
+
+
+def _extract_date_range(text: str) -> tuple[str, str] | None:
+    """Best-effort start/end date extraction from an Indonesian NL question.
+
+    Understands a full single date, ``<month> <year>``, quarters (``Q1 2019``),
+    ``awal``/``akhir <year>`` halves, and a bare year. Returns None when no year
+    is present so the hybrid path can degrade safely.
+    """
+    single = _parse_date(text)
+    if single:
+        return single, single
+
+    lowered = text.lower()
+    year_match = re.search(r"\b((?:19|20)\d{2})\b", lowered)
+    if not year_match:
+        return None
+    year = int(year_match.group(1))
+
+    month_names = "|".join(INDONESIAN_MONTHS)
+    month_match = re.search(rf"\b({month_names})\b", lowered)
+    if month_match:
+        month = INDONESIAN_MONTHS[month_match.group(1)]
+        return _month_range(year, month)
+
+    quarter_match = re.search(
+        r"\bq\s*([1-4])\b", lowered
+    ) or re.search(r"\b(?:kuartal|triwulan)\s*([1-4])\b", lowered)
+    if quarter_match:
+        quarter = int(quarter_match.group(1))
+        start_month = (quarter - 1) * 3 + 1
+        return (
+            f"{year}-{start_month:02d}-01",
+            _month_end(year, start_month + 2),
+        )
+
+    if "awal" in lowered:
+        return f"{year}-01-01", f"{year}-06-30"
+    if "akhir" in lowered:
+        return f"{year}-07-01", f"{year}-12-31"
+
+    return f"{year}-01-01", f"{year}-12-31"
+
+
+def _month_range(year: int, month: int) -> tuple[str, str]:
+    return f"{year}-{month:02d}-01", _month_end(year, month)
+
+
+def _month_end(year: int, month: int) -> str:
+    last_day = calendar.monthrange(year, month)[1]
+    return f"{year}-{month:02d}-{last_day:02d}"
+
+
+def _build_news_chroma_tool(collection_name: str) -> ChromaDBTool:
+    """Build a ChromaDB tool bound to the finance news collection from config."""
+    config = load_config("chromadb.yaml")
+    chroma_config = config.get("chromadb", {}) if isinstance(config, dict) else {}
+    embedding_config = config.get("embedding", {}) if isinstance(config, dict) else {}
+    persist_directory = chroma_config.get(
+        "persist_directory", str(DEFAULT_PERSIST_DIRECTORY)
+    )
+    persist_path = Path(persist_directory)
+    if not persist_path.is_absolute():
+        persist_path = PROJECT_ROOT / persist_path
+
+    return ChromaDBTool(
+        persist_directory=persist_path,
+        collection_name=collection_name,
+        embedding_model_name=str(
+            embedding_config.get("model", "sentence-transformers/all-MiniLM-L6-v2")
+        ),
+    )
 
 
 def run_workflow(user_query: str) -> AnalyticsState:

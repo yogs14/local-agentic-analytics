@@ -7,6 +7,7 @@ import warnings
 from time import perf_counter
 from typing import Any, TypedDict
 
+from local_agentic_analytics.agents.route_types import RouteDecision
 from local_agentic_analytics.core.dataset_profile import (
     profile_to_compact_sql_context,
     profile_to_prompt_context,
@@ -52,6 +53,8 @@ class _LangGraphWorkflowState(TypedDict, total=False):
     has_rule_based_sql: bool
     needs_repair: bool
     should_finalize: bool
+    planned_route: str
+    hybrid_ran: bool
 
 
 class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
@@ -106,6 +109,9 @@ class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
             graph = StateGraph(_LangGraphWorkflowState)
             graph.add_node("initialize_state", self.initialize_state_node)
             graph.add_node("load_profile", self.load_profile_node)
+            graph.add_node("plan_route", self.plan_route_node)
+            graph.add_node("run_rag", self.run_rag_node)
+            graph.add_node("run_hybrid", self.run_hybrid_node)
             graph.add_node("load_schema", self.load_schema_node)
             graph.add_node(
                 "resolve_rule_based_sql",
@@ -125,6 +131,30 @@ class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
                 "load_profile",
                 self._route_after_load_profile,
                 {
+                    "plan_route": "plan_route",
+                    "finalize": "finalize",
+                },
+            )
+            # The planner is the first node whose downstream edge target is chosen
+            # by a decision (deterministic resolver + optional LLM) rather than a
+            # computed flag: it dispatches to the SQL, RAG, or HYBRID retrieval
+            # paths based on the route it selects.
+            graph.add_conditional_edges(
+                "plan_route",
+                self._route_after_planning,
+                {
+                    "load_schema": "load_schema",
+                    "run_rag": "run_rag",
+                    "run_hybrid": "run_hybrid",
+                    "finalize": "finalize",
+                },
+            )
+            graph.add_edge("run_rag", "finalize")
+            graph.add_conditional_edges(
+                "run_hybrid",
+                self._route_after_hybrid,
+                {
+                    "run_rag": "run_rag",
                     "load_schema": "load_schema",
                     "finalize": "finalize",
                 },
@@ -228,6 +258,50 @@ class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
             return self._mark_finalize_error(graph_state, exc)
         finally:
             state.latency["load_profile"] = perf_counter() - start
+
+    def plan_route_node(
+        self,
+        graph_state: _LangGraphWorkflowState,
+    ) -> _LangGraphWorkflowState:
+        """Choose a retrieval route; the conditional edge follows this decision."""
+        state = _get_analytics_state(graph_state)
+        try:
+            route = self._plan_route(state)
+            return {
+                **graph_state,
+                "analytics_state": state,
+                "planned_route": route.value,
+            }
+        except Exception as exc:  # pragma: no cover - planner never raises.
+            return self._mark_finalize_error(graph_state, exc)
+
+    def run_rag_node(
+        self,
+        graph_state: _LangGraphWorkflowState,
+    ) -> _LangGraphWorkflowState:
+        state = _get_analytics_state(graph_state)
+        try:
+            self._run_rag_news(state)
+            return {**graph_state, "analytics_state": state}
+        except Exception as exc:
+            return self._mark_finalize_error(graph_state, exc)
+
+    def run_hybrid_node(
+        self,
+        graph_state: _LangGraphWorkflowState,
+    ) -> _LangGraphWorkflowState:
+        state = _get_analytics_state(graph_state)
+        try:
+            hybrid_ran = self._run_hybrid(state)
+            return {
+                **graph_state,
+                "analytics_state": state,
+                "hybrid_ran": hybrid_ran,
+                # _run_hybrid may rewrite planned_route to a safe degrade target.
+                "planned_route": state.planned_route,
+            }
+        except Exception as exc:
+            return self._mark_finalize_error(graph_state, exc)
 
     def load_schema_node(
         self,
@@ -501,7 +575,9 @@ class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
     ) -> _LangGraphWorkflowState:
         state = _get_analytics_state(graph_state)
         start = perf_counter()
-        state.success = bool(state.final_answer and state.sql_result is not None)
+        # The SQL and HYBRID paths set sql_result; the RAG path does not, so a
+        # final answer alone is sufficient evidence of a successful run.
+        state.success = bool(state.final_answer)
         state.latency["finalize"] = perf_counter() - start
         return {**graph_state, "analytics_state": state}
 
@@ -521,6 +597,31 @@ class LangGraphAnalyticsWorkflow(SequentialAnalyticsWorkflow):
     ) -> str:
         if graph_state.get("should_finalize"):
             return "finalize"
+        return "plan_route"
+
+    def _route_after_planning(
+        self,
+        graph_state: _LangGraphWorkflowState,
+    ) -> str:
+        if graph_state.get("should_finalize"):
+            return "finalize"
+        planned = graph_state.get("planned_route")
+        if planned == RouteDecision.RAG_NEWS.value:
+            return "run_rag"
+        if planned == RouteDecision.HYBRID.value:
+            return "run_hybrid"
+        return "load_schema"
+
+    def _route_after_hybrid(
+        self,
+        graph_state: _LangGraphWorkflowState,
+    ) -> str:
+        if graph_state.get("should_finalize"):
+            return "finalize"
+        if graph_state.get("hybrid_ran"):
+            return "finalize"
+        if graph_state.get("planned_route") == RouteDecision.RAG_NEWS.value:
+            return "run_rag"
         return "load_schema"
 
     def _route_after_load_schema(

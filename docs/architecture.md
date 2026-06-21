@@ -16,15 +16,40 @@ Arsitektur konseptualnya dapat dibaca sebagai:
 Workflow analitik berjalan berurutan:
 
 1. User memberi pertanyaan bahasa natural.
-2. Sistem membaca schema tabel dari DuckDB.
-3. Rule-based SQL resolver mencoba memetakan pertanyaan umum secara deterministik.
-4. Jika rule tidak cocok, SQL Agent menghasilkan DuckDB SQL.
-5. SQL semantic guard memvalidasi aturan domain energi yang berisiko, seperti konversi kWh dan missing value.
-6. DuckDB mengeksekusi SQL.
-7. Repair Agent memperbaiki SQL satu kali jika query gagal atau tidak lolos semantic guard.
-8. Reporter Agent membuat jawaban bahasa Indonesia dari hasil query.
+2. Planner memilih rute retrieval (`STRUCTURED_SQL`, `RAG_NEWS`, atau `HYBRID`).
+3. Untuk `STRUCTURED_SQL`: baca schema dari DuckDB, rule-based SQL resolver,
+   lalu SQL Agent jika rule tidak cocok, semantic guard, eksekusi DuckDB, dan
+   Repair Agent satu kali jika gagal.
+4. Untuk `RAG_NEWS`: retrieval headline dari ChromaDB `finance_news`.
+5. Untuk `HYBRID`: ringkasan harga DuckDB + berita ChromaDB, dengan degrade aman.
+6. Reporter Agent membuat jawaban bahasa Indonesia dari hasil rute terpilih.
 
 Pola ini disebut multi-agent secara role-based, bukan parallel multi-agent. Setiap role memiliki prompt dan tanggung jawab berbeda, tetapi tetap dijalankan satu per satu.
+
+## Agentic Route Planning
+
+Planner adalah satu keputusan nyata yang dipindahkan ke agen: pemilihan rute
+retrieval. Untuk pertama kalinya tujuan node berikutnya ditentukan oleh
+reasoning, bukan flag boolean yang dihitung kode.
+
+Mengikuti pola rule-based-vs-LLM yang sudah ada, setiap keputusan planner
+dipasangkan dengan resolver deterministik:
+
+- `RuleBasedRouteResolver` (deterministik, murni, mudah diuji) berjalan lebih
+  dulu dan menangani sinyal berita/harga yang eksplisit.
+- `PlannerAgent` (LLM lokal yang sama, `gemma2:2b`, temperature 0.0, max_tokens
+  kecil) hanya dipanggil ketika resolver ambigu dan `use_planner=True`. Parsing
+  keluarannya tangguh terhadap model 2B yang lemah.
+- Energy selalu `STRUCTURED_SQL` tanpa memanggil LLM (short-circuit), sehingga
+  perilakunya tidak berubah.
+- Kegagalan apa pun (parsing, timeout, model tak tersedia) degrade aman ke
+  `STRUCTURED_SQL`. Planner tidak pernah memecahkan workflow.
+
+Keputusan planner dicatat sebagai tool call (`planner.route` untuk rule-based,
+`ollama.planning` untuk LLM) lengkap dengan metadata Ollama, dan tersimpan di
+`state.planned_route`, `state.route_source`, serta `state.route_reasoning`.
+Prinsip single-SLM dan sequential execution dipertahankan; tidak ada model atau
+paralelisme baru.
 
 ## One Local Model, Multiple Roles
 
@@ -79,7 +104,10 @@ ChromaDB disiapkan untuk retrieval dokumen. Modul ini dipisahkan dari workflow D
 - DuckDB: analisis data terstruktur.
 - ChromaDB: retrieval dokumen dan konteks teks.
 
-RAG masih tahap awal dan belum menjadi bagian utama report generation.
+Pada domain finance, koleksi `finance_news` di ChromaDB kini terhubung langsung
+ke Q&A workflow lewat planner: rute `RAG_NEWS` mengambil headline dari koleksi
+ini, dan rute `HYBRID` menggabungkannya dengan ringkasan harga DuckDB menjadi
+satu jawaban. Report generation tetap belum memakai RAG sebagai bagian utama.
 
 ## Logs as Memory
 
@@ -89,6 +117,7 @@ Log eksperimen dipakai sebagai memori observabilitas:
 - `tool_call_audit.jsonl` menyimpan jejak tool call dan metadata Ollama.
 - `batch_eval_energy.csv` menyimpan evaluasi batch.
 - `sql_gold_eval.csv` menyimpan perbandingan SQL agent dengan gold SQL.
+- `planner_eval.csv` dan `planner_eval_summary.json` menyimpan akurasi routing planner.
 - `report_generation_log.json` menyimpan metadata report generation.
 - `report_eval.json` menyimpan evaluasi report terhadap ground truth.
 

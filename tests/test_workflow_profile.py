@@ -10,6 +10,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from local_agentic_analytics.core.dataset_profile import DatasetProfile
+from local_agentic_analytics.core.pipeline_toggles import PipelineToggles
 from local_agentic_analytics.graph.workflow import SequentialAnalyticsWorkflow
 
 
@@ -98,12 +99,15 @@ def test_workflow_passes_dataset_profile_context_to_sql_agent():
 
 def test_workflow_finance_domain_uses_finance_profile_and_rule_sql():
     duckdb_tool = FakeDuckDBTool()
+    # Disable the LLM planner so this rule-based SQL assertion stays deterministic
+    # and offline; the deterministic resolver still routes it to STRUCTURED_SQL.
     workflow = SequentialAnalyticsWorkflow(
         domain="finance",
         duckdb_tool=duckdb_tool,
         sql_agent=CapturingSQLAgent(),
         reporter_agent=FakeReporterAgent(),
         audit_logger=NoopAuditLogger(),
+        toggles=PipelineToggles(use_planner=False),
     )
 
     state = workflow.run("Berapa rata-rata harga penutupan?")

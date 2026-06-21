@@ -23,4 +23,7 @@ class AnalyticsState:
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
     retrieved_context: list[dict[str, Any]] = field(default_factory=list)
     route: str | None = None
+    planned_route: str | None = None
+    route_source: str | None = None
+    route_reasoning: str = ""
     success: bool = False

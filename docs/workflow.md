@@ -8,16 +8,54 @@ Urutan:
 
 1. User menjalankan CLI `ask`.
 2. Sistem memeriksa database DuckDB.
-3. DatasetProfile domain `energy` dimuat dari `domains/energy/profile.yaml`.
-4. Schema `electric_power` dibaca melalui `DuckDBTool`.
-5. Rule-based SQL resolver mencoba membuat SQL deterministik untuk query umum.
-6. Jika rule tidak cocok, SQL Agent menghasilkan SQL DuckDB dengan compact DatasetProfile context.
-7. SQL semantic guard memvalidasi aturan energi penting.
-8. SQL dieksekusi oleh DuckDB.
-9. Jika gagal atau tidak lolos semantic guard, Repair Agent memperbaiki SQL satu kali.
-10. Query hasil repair divalidasi dan dieksekusi ulang.
-11. Reporter Agent membuat jawaban bahasa Indonesia.
-12. Latency, selected tools, tool calls, dan status disimpan ke log eksperimen.
+3. DatasetProfile domain dimuat dari `domains/<domain>/profile.yaml`.
+4. **Planner memilih rute retrieval.** Inilah satu-satunya keputusan yang
+   dipindahkan ke agen: tujuan node berikutnya ditentukan oleh reasoning, bukan
+   flag boolean yang dihitung kode. Lihat bagian "Planner Routing" di bawah.
+5. Untuk rute `STRUCTURED_SQL`, alur SQL berikut berjalan apa adanya:
+   1. Schema tabel dibaca melalui `DuckDBTool`.
+   2. Rule-based SQL resolver mencoba membuat SQL deterministik untuk query umum.
+   3. Jika rule tidak cocok, SQL Agent menghasilkan SQL DuckDB dengan compact DatasetProfile context.
+   4. SQL semantic guard memvalidasi aturan energi penting.
+   5. SQL dieksekusi oleh DuckDB.
+   6. Jika gagal atau tidak lolos semantic guard, Repair Agent memperbaiki SQL satu kali, lalu divalidasi dan dieksekusi ulang.
+6. Untuk rute `RAG_NEWS`, headline berita diambil dari koleksi ChromaDB
+   `finance_news` dan diisikan ke `state.retrieved_context` (tanpa SQL).
+7. Untuk rute `HYBRID`, ringkasan harga DuckDB digabung dengan berita ChromaDB;
+   jika ticker/rentang tanggal tidak terekstrak, rute degrade aman ke `RAG_NEWS`
+   atau `STRUCTURED_SQL` tanpa crash.
+8. Reporter Agent membuat jawaban bahasa Indonesia dari hasil rute yang dipilih.
+9. Latency, selected tools, tool calls, dan status disimpan ke log eksperimen.
+
+### Planner Routing (keputusan rute di tangan agen)
+
+Planner memindahkan pemilihan rute retrieval ke agen, dipasangkan resolver
+deterministik dengan fallback aman:
+
+1. **Energy → `STRUCTURED_SQL`** (`route_source="forced_energy"`) tanpa memanggil
+   LLM. Perilaku energy tidak berubah sama sekali (short-circuit).
+2. **`RuleBasedRouteResolver`** (deterministik, dicatat sebagai `planner.route`):
+   sinyal berita (`berita`, `headline`, `sentimen`, `analis`, `publisher`,
+   `kabar`) → `RAG_NEWS`; sinyal berita + sinyal harga/konektor → `HYBRID`
+   (hybrid menang atas RAG murni). `route_source="rule_based"`.
+3. **`PlannerAgent` (LLM)** dipanggil hanya jika resolver ambigu (hanya
+   `STRUCTURED_SQL`) dan `use_planner=True`. Output di-parse tangguh ke salah
+   satu dari `{STRUCTURED_SQL, RAG_NEWS, HYBRID}`; dicatat sebagai
+   `ollama.planning`. `route_source="llm"`.
+4. **Kegagalan apa pun → `STRUCTURED_SQL`** (`route_source="default"`). Planner
+   tidak pernah memecahkan workflow.
+
+State menyimpan `planned_route`, `route_source`, dan `route_reasoning`. Toggle
+`PipelineToggles.use_planner` (default `True`) mematikan langkah LLM sehingga
+hanya resolver deterministik yang dipakai.
+
+Contoh:
+
+```powershell
+python -m local_agentic_analytics.cli ask --domain finance "Bagaimana sentimen berita terbaru tentang TSLA?"
+```
+
+ter-route ke `RAG_NEWS` dan menjawab dari headline, bukan error SQL.
 
 Command:
 
@@ -38,16 +76,23 @@ Diagram LangGraph Q&A:
 START
   -> initialize_state
   -> load_profile
-  -> load_schema
-  -> resolve_rule_based_sql
-  -> generate_sql jika resolver gagal
-  -> semantic_validate_sql
-  -> execute_sql
-  -> repair_sql jika gagal
-  -> generate_answer
+  -> plan_route                         (keputusan rute: SQL / RAG / HYBRID)
+       |- STRUCTURED_SQL -> load_schema
+       |                      -> resolve_rule_based_sql
+       |                      -> generate_sql jika resolver gagal
+       |                      -> semantic_validate_sql
+       |                      -> execute_sql
+       |                      -> repair_sql jika gagal
+       |                      -> generate_answer
+       |- RAG_NEWS       -> run_rag      -> generate_answer (via reporter)
+       |- HYBRID         -> run_hybrid   -> generate_answer (via reporter)
+       |                      (degrade aman -> run_rag / load_schema)
   -> finalize
   -> END
 ```
+
+`plan_route` adalah node pertama yang tujuan edge-nya bergantung pada keputusan
+(rule-based + LLM) lewat `add_conditional_edges`, bukan flag terhitung.
 
 ## Batch Evaluation Workflow
 
@@ -83,6 +128,8 @@ reports/experiments/tool_call_audit.jsonl
 
 Tool call yang umum muncul:
 
+- `planner.route` keputusan rute rule-based (domain finance)
+- `ollama.planning` keputusan rute LLM jika resolver ambigu dan `use_planner=True`
 - `duckdb.schema`
 - `rule_based_sql_resolver.resolve`
 - `ollama.sql_generation` jika resolver tidak cocok
@@ -90,6 +137,7 @@ Tool call yang umum muncul:
 - `duckdb.query`
 - `ollama.sql_repair` jika repair terjadi
 - `duckdb.query_repaired` jika repair terjadi
+- `chromadb.query` untuk rute `RAG_NEWS` / `HYBRID`
 - `ollama.reporting`
 
 Setiap record minimal berisi timestamp, component, action, tool, status, latency, input summary, output summary, error message, dan metadata. Untuk tool Ollama, metadata dapat menunjukkan `load_duration`, `prompt_eval_duration`, `eval_duration`, `prompt_eval_count`, dan `eval_count`.
@@ -113,6 +161,39 @@ Command:
 python scripts/run_sql_gold_eval.py
 python scripts/analyze_sql_gold_mismatches.py
 ```
+
+## Planner Routing Evaluation Workflow
+
+Planner evaluation mengukur seberapa tepat rute retrieval dipilih, dan
+mengisolasi kontribusi LLM planner.
+
+Urutan:
+
+1. Baca 15 pertanyaan dari `data/evaluation/finance_questions.json` beserta
+   `expected_source` (sql/rag/hybrid).
+2. Petakan `expected_source` ke `RouteDecision` (sql→STRUCTURED_SQL,
+   rag→RAG_NEWS, hybrid→HYBRID).
+3. Jalankan planner untuk dua konfigurasi: `rule_based_only`
+   (`use_planner=False`) dan `rule_based_plus_llm` (`use_planner=True`).
+4. Hitung routing accuracy, confusion per-rute, dan breakdown `route_source`
+   (rule_based / llm / default).
+
+Command:
+
+```powershell
+python scripts/run_planner_eval.py
+```
+
+Output:
+
+```text
+reports/experiments/planner_eval.csv
+reports/experiments/planner_eval_summary.json
+```
+
+Breakdown `route_source` pada `rule_based_plus_llm` menunjukkan berapa keputusan
+yang benar-benar dibuat oleh LLM (pertanyaan SQL yang ambigu) versus oleh
+resolver deterministik (pertanyaan berita/hybrid yang eksplisit).
 
 ## Report Generation Workflow
 

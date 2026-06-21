@@ -124,6 +124,104 @@ class NoopAuditLogger:
         return None
 
 
+class StrictDuckDBTool:
+    def get_schema(self, table_name: str) -> str:
+        raise AssertionError("SQL schema must not be loaded on the RAG route")
+
+    def execute_query(self, sql: str) -> pd.DataFrame:
+        raise AssertionError("SQL must not be executed on the RAG route")
+
+
+class FakeChromaDBTool:
+    def __init__(self, matches):
+        self.matches = matches
+        self.queries = []
+
+    def query(self, text, top_k=3, where=None):
+        self.queries.append({"text": text, "top_k": top_k, "where": where})
+        return list(self.matches)
+
+
+def _news_matches():
+    return [
+        {
+            "document": "TSLA melonjak setelah laporan pengiriman kuat.",
+            "metadata": {"ticker": "TSLA", "date": "2020-01-10", "publisher": "Reuters"},
+            "distance": 0.1,
+        }
+    ]
+
+
+def test_langgraph_routes_finance_news_question_to_rag():
+    chroma_tool = FakeChromaDBTool(_news_matches())
+    reporter = FakeReporterAgent(answer="Sentimen TSLA cenderung positif.")
+    workflow = LangGraphAnalyticsWorkflow(
+        domain="finance",
+        duckdb_tool=StrictDuckDBTool(),
+        sql_agent=FailingSQLAgent(),
+        reporter_agent=reporter,
+        chroma_tool=chroma_tool,
+        audit_logger=NoopAuditLogger(),
+    )
+
+    state = workflow.run("Bagaimana sentimen berita terbaru tentang TSLA?")
+
+    assert state.success is True
+    assert state.planned_route == "RAG_NEWS"
+    assert state.route == "rag_news"
+    assert state.final_answer == "Sentimen TSLA cenderung positif."
+    assert state.retrieved_context[0]["ticker"] == "TSLA"
+    assert len(chroma_tool.queries) == 1
+    tools = {event["tool"] for event in state.tool_calls}
+    assert {"planner.route", "chromadb.query", "ollama.reporting"} <= tools
+    assert "duckdb.schema" not in tools
+
+
+def test_langgraph_routes_hybrid_question_to_fusion():
+    chroma_tool = FakeChromaDBTool(_news_matches())
+    duckdb_tool = FakeDuckDBTool(
+        results_by_sql={
+            (
+                "SELECT\n"
+                "    MIN(close) AS min_close_usd,\n"
+                "    AVG(close) AS avg_close_usd,\n"
+                "    MAX(close) AS max_close_usd,\n"
+                "    COUNT(*) AS trading_days\n"
+                "FROM stock_prices\n"
+                "WHERE ticker = 'NVDA'\n"
+                "  AND CAST(date AS DATE) BETWEEN DATE '2019-06-01' "
+                "AND DATE '2019-06-30';"
+            ): pd.DataFrame(
+                {
+                    "min_close_usd": [30.0],
+                    "avg_close_usd": [33.0],
+                    "max_close_usd": [36.0],
+                    "trading_days": [20],
+                }
+            )
+        }
+    )
+    workflow = LangGraphAnalyticsWorkflow(
+        domain="finance",
+        duckdb_tool=duckdb_tool,
+        sql_agent=FailingSQLAgent(),
+        reporter_agent=FakeReporterAgent(),
+        chroma_tool=chroma_tool,
+        audit_logger=NoopAuditLogger(),
+    )
+
+    state = workflow.run(
+        "Ringkas pergerakan harga NVDA pada Juni 2019 dan kaitkan dengan beritanya."
+    )
+
+    assert state.success is True
+    assert state.planned_route == "HYBRID"
+    assert state.route == "hybrid"
+    assert state.sql_result["row_count"] == 1
+    assert state.retrieved_context[0]["ticker"] == "TSLA"
+    assert chroma_tool.queries[0]["where"] == {"ticker": "NVDA"}
+
+
 def test_run_langgraph_workflow_returns_analytics_state(monkeypatch):
     class FakeLangGraphAnalyticsWorkflow:
         def __init__(self, domain: str = "energy"):

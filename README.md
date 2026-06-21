@@ -58,6 +58,23 @@ Domain finance memakai **dua sumber data terpisah**:
 
 Kedua sumber baru terhubung di lapisan aplikasi melalui hybrid query, bukan di dalam satu store. Detail lengkap ada di `domains/finance/README.md`.
 
+### Agentic Route Planning (Planner)
+
+Planner memindahkan satu keputusan nyata ke agen: **pemilihan rute retrieval**. Untuk pertama kalinya tujuan node berikutnya ditentukan oleh reasoning, bukan flag boolean yang dihitung kode. Rute target:
+
+- `STRUCTURED_SQL` — pipeline SQL yang sudah ada (energy & finance).
+- `RAG_NEWS` — retrieval headline dari koleksi ChromaDB `finance_news`.
+- `HYBRID` — gabungan ringkasan harga DuckDB + berita ChromaDB.
+
+Mengikuti pola rule-based-vs-LLM yang sudah ada, keputusan planner dipasangkan dengan resolver deterministik dan fallback aman:
+
+1. **Energy → `STRUCTURED_SQL`** tanpa memanggil LLM (short-circuit); perilaku energy tidak berubah.
+2. **`RuleBasedRouteResolver`** (deterministik, dicatat `planner.route`) menangani sinyal berita/harga eksplisit.
+3. **`PlannerAgent`** (LLM lokal `gemma2:2b`, temperature 0.0, dicatat `ollama.planning`) dipanggil hanya saat resolver ambigu dan `use_planner=True`; parsing keluaran tangguh.
+4. **Kegagalan apa pun → `STRUCTURED_SQL`** (`route_source="default"`). Planner tidak pernah memecahkan workflow.
+
+Keputusan tersimpan di `state.planned_route`, `state.route_source`, dan `state.route_reasoning`. Toggle `PipelineToggles.use_planner` (default `True`) mematikan langkah LLM. Di LangGraph, node `plan_route` adalah node pertama yang tujuan edge-nya bergantung pada keputusan ini melalui `add_conditional_edges`.
+
 ### Tool Calling and Audit Log
 
 Tool calling dilakukan secara eksplisit melalui wrapper lokal:
@@ -204,7 +221,10 @@ Mode Q&A melalui CLI, domain dipilih via `--domain` (default `energy`):
 ```powershell
 python -m local_agentic_analytics.cli ask "Berapa rata-rata konsumsi daya aktif pada tanggal 16 Desember 2006?"
 python -m local_agentic_analytics.cli ask --domain finance "Berapa rata-rata harga penutupan NVDA antara 2 Januari 2019 dan 31 Januari 2019?"
+python -m local_agentic_analytics.cli ask --domain finance "Bagaimana sentimen berita terbaru tentang TSLA?"
 ```
+
+Pertanyaan pertama ter-route ke `STRUCTURED_SQL`, sedangkan pertanyaan berita ter-route oleh planner ke `RAG_NEWS` dan dijawab dari headline `finance_news` (bukan SQL). Domain energy selalu `STRUCTURED_SQL`.
 
 Engine dapat dipilih eksplisit:
 
@@ -274,8 +294,11 @@ Manifest `references/sql_gold/finance_gold_questions.json` berisi 8 gold SQL fin
 
 ```powershell
 python scripts/run_ablation_eval.py        # isolasi kontribusi LLM vs scaffolding
+python scripts/run_planner_eval.py          # akurasi routing planner (rule-based vs rule-based+LLM)
 python scripts/run_gpu_cpu_benchmark.py     # bandingkan GPU vs CPU (mendukung --repeat)
 ```
+
+Planner eval menjalankan 15 pertanyaan `data/evaluation/finance_questions.json` pada dua konfigurasi (`rule_based_only` vs `rule_based_plus_llm`), memetakan `expected_source` ke `RouteDecision`, lalu menghitung routing accuracy, confusion per-rute, dan breakdown `route_source`. Output: `reports/experiments/planner_eval.csv` dan `planner_eval_summary.json`.
 
 ## 10. Generate Energy Charts
 

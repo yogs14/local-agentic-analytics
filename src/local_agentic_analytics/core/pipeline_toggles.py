@@ -18,3 +18,8 @@ class PipelineToggles:
     apply_domain_normalization: bool = True
     use_semantic_guard: bool = True
     use_repair: bool = True
+    # When True the planner may consult the LLM to pick a retrieval route after
+    # the deterministic resolver is unsure. When False only the deterministic
+    # ``RuleBasedRouteResolver`` runs (no LLM planning call). Energy is always
+    # short-circuited to STRUCTURED_SQL regardless of this flag.
+    use_planner: bool = True

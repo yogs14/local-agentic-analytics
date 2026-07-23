@@ -1,0 +1,67 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+\setlength{\parskip}{0.7em}
+\setlength{\parindent}{0pt}
+
+\title{ Laporan Analisis Dataset: u\_s\_renewable\_energy\_consumption\_2 }
+\author{ Local Agentic Analytics }
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Laporan ini menyajikan analisis dataset berdasarkan grafik agregat dan insight otomatis. Ringkasan temuan utama: Grafik "Distribution Year" menunjukkan distribusi tahun global active power yang tergolong konsisten. Analisis data energi menunjukkan bahwa pada tahun 1998, rata-rata penggunaan energi dari sumber hidroelektrik, geothermal, solar, angin, kayu, dan limbah mencapai nilai yang signifikan.
+\end{abstract}
+
+\section{Introduction}
+Laporan ini menganalisis dataset 'u\_s\_renewable\_energy\_consumption\_2' yang disimpan pada tabel 'u\_s\_renewable\_energy\_consumption\_2'. Dataset memiliki 16 kolom numerik yang menjadi dasar visualisasi dan analisis statistik ringkas.
+
+\section{Methodology}
+Data terstruktur disimpan dan diagregasi menggunakan DuckDB agar analisis tetap ringan di lingkungan lokal. Visualisasi dibuat secara deterministik dengan matplotlib dari hasil query agregat, sedangkan narasi tiap grafik dihasilkan oleh InsightAgent berbasis model lokal menggunakan statistik ringkas, bukan data mentah.
+
+\section{Detailed Analysis}
+\subsection{ Distribusi Year }
+Grafik "Distribution Year" menunjukkan distribusi tahun global active power yang tergolong konsisten. Rata-rata global active power pada periode ini adalah 1998.0424143556281 kW, dengan standar deviasi sebesar 14.747377583997668 kW.  Periode tahun yang tercatat menunjukkan distribusi data yang cukup luas, dengan total energi yang dihasilkan mencapai 1998.0424143556281 kWh per tahun. Perlu diingat bahwa data ini hanya mencakup periode 1973-2024 dan memerlukan pembanding historis untuk mengidentifikasi anomali atau tren yang signifikan.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{\detokenize{chart_distribution.png}}
+\caption{ Distribusi frekuensi nilai pada kolom Year. }
+\label{fig:distribution-Year}
+\end{figure}
+\subsection{ Rata-rata per Kolom Numerik }
+Analisis data energi menunjukkan bahwa pada tahun 1998, rata-rata penggunaan energi dari sumber hidroelektrik, geothermal, solar, angin, kayu, dan limbah mencapai nilai yang signifikan.  Rata-rata penggunaan energi hidroelektrik adalah 0.16975889070146802 kW, sementara geothermal mencapai 1.1463693311582284 kW.  Energi solar dan angin menunjukkan nilai rata-rata yang lebih tinggi, yaitu 2.0150081566068514 kW dan 4.282404241435567 kW, masing-masing.  Sementara itu, energi kayu mencapai rata-rata 36.64440848287106 kW, sedangkan energi limbah mencapai 5.820123980424129 kW.
+
+Untuk memahami anomali dan trend penggunaan energi secara lebih detail, diperlukan pembanding historis untuk periode yang lebih panjang.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{\detokenize{chart_averages.png}}
+\caption{ Perbandingan rata-rata antar kolom numerik. }
+\label{fig:column-averages}
+\end{figure}
+\subsection{ Frekuensi Kategori: Sector }
+Berdasarkan metadata grafik dan statistik yang diberikan, terdapat 5 kategori sektor yang terdaftar dalam data. Kategori "Commercial" menempati posisi teratas dengan total count sebesar 3065. Data menunjukkan frekuensi kategori ini cukup signifikan, namun perlu dilakukan pembanding historis untuk memastikan adanya perubahan signifikan dalam frekuensi sektor Commercial.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{\detokenize{chart_categories.png}}
+\caption{ Distribusi 15 kategori teratas pada kolom Sector. }
+\label{fig:categories-Sector}
+\end{figure}
+
+\section{Synthesis and Implications}
+Secara keseluruhan, hasil visualisasi menunjukkan beberapa pola yang perlu dibaca bersama. Grafik "Distribution Year" menunjukkan distribusi tahun global active power yang tergolong konsisten. Analisis data energi menunjukkan bahwa pada tahun 1998, rata-rata penggunaan energi dari sumber hidroelektrik, geothermal, solar, angin, kayu, dan limbah mencapai nilai yang signifikan. Berdasarkan metadata grafik dan statistik yang diberikan, terdapat 5 kategori sektor yang terdaftar dalam data. Penilaian anomali tetap memerlukan pembanding historis atau batas operasional eksplisit.
+
+\section{Conclusion}
+Laporan ini menunjukkan bahwa pipeline lokal dapat menghasilkan grafik, statistik ringkas, dan narasi analisis secara sequential untuk dataset sembarang. Hasil ini dapat digunakan sebagai dasar eksplorasi data lanjutan, dengan catatan bahwa klaim anomali memerlukan pembanding historis tambahan.
+
+\end{document}

@@ -17,6 +17,7 @@ from typing import Any, Callable
 from local_agentic_analytics.core.config import PROJECT_ROOT
 from local_agentic_analytics.core.pipeline_toggles import PipelineToggles
 from local_agentic_analytics.core.state import AnalyticsState
+from local_agentic_analytics.evaluation.result_comparison import compare_result_sets
 from local_agentic_analytics.evaluation.sql_gold_eval import (
     DEFAULT_GOLD_QUESTIONS_PATH,
     SqlExecutionResult,
@@ -37,6 +38,8 @@ DEFAULT_SUMMARY_OUTPUT_PATH = (
     PROJECT_ROOT / "reports" / "experiments" / "ablation_summary.json"
 )
 
+# "numeric_match" is the legacy scalar-only metric; "result_match_full" is the
+# Fase 2 row-set comparison. Both are reported side by side.
 ABLATION_EVAL_COLUMNS = (
     "config",
     "question_id",
@@ -50,6 +53,8 @@ ABLATION_EVAL_COLUMNS = (
     "absolute_error",
     "relative_error",
     "error_message",
+    "result_match_full",
+    "result_match_reason",
 )
 
 FULL_CONFIG_NAME = "D_full"
@@ -196,6 +201,10 @@ def run_single_ablation_question(
         agent_result.numeric_value,
         gold_result.numeric_value,
     )
+    result_comparison = compare_result_sets(
+        agent_result.result_text,
+        gold_result.result_text,
+    )
 
     return {
         "config": config.name,
@@ -210,6 +219,8 @@ def run_single_ablation_question(
         "absolute_error": comparison["absolute_error"],
         "relative_error": comparison["relative_error"],
         "error_message": " | ".join(errors),
+        "result_match_full": result_comparison["result_match_full"],
+        "result_match_reason": result_comparison["result_match_reason"],
     }
 
 
@@ -231,6 +242,8 @@ def _failed_row(
         "absolute_error": "",
         "relative_error": "",
         "error_message": error_message,
+        "result_match_full": "",
+        "result_match_reason": "not_evaluated",
     }
 
 
@@ -264,6 +277,12 @@ def summarize_ablation_results(rows: list[dict[str, Any]]) -> dict[str, Any]:
         numeric_match_count = sum(
             1 for row in numeric_rows if bool(row.get("numeric_match"))
         )
+        result_full_rows = [
+            row for row in config_rows if row.get("result_match_full") != ""
+        ]
+        result_full_match_count = sum(
+            1 for row in result_full_rows if bool(row.get("result_match_full"))
+        )
         configs_summary[name] = {
             "total": total,
             "execution_success_count": execution_success_count,
@@ -273,6 +292,11 @@ def summarize_ablation_results(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "numeric_compared_count": len(numeric_rows),
             "numeric_match_count": numeric_match_count,
             "numeric_match_rate": numeric_match_count / total if total else 0.0,
+            "result_full_compared_count": len(result_full_rows),
+            "result_full_match_count": result_full_match_count,
+            "result_match_full_rate": (
+                result_full_match_count / total if total else 0.0
+            ),
         }
 
     return {

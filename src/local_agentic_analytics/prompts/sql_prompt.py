@@ -8,6 +8,17 @@ from local_agentic_analytics.core.dataset_profile import (
 )
 
 
+# Appended to the prompt rules only when the schema contains a quoted column
+# name. The schema renders such names already double-quoted, so this leaves
+# prompts for clean schemas (energy, finance) byte-identical.
+IDENTIFIER_QUOTING_RULE = (
+    "\n- Some columns in the schema are shown double-quoted because their names "
+    "contain spaces or special characters. Copy those names exactly with the "
+    'double quotes, e.g. AVG("Hydroelectric Power"). Never quote a column whose '
+    "name has no spaces or special characters."
+)
+
+
 ENERGY_FEW_SHOT_EXAMPLES = """Few-shot examples:
 
 Example 1:
@@ -39,7 +50,7 @@ Generate one valid DuckDB SQL query that answers the user question.
 Rules:
 - Return SQL only.
 - No markdown, no code fences, no explanation.
-- Use only the exact table name and columns present in the schema.
+- Use only the exact table name and columns present in the schema.{identifier_quoting_rule}
 - Use semantic rules from the compact DatasetProfile context when they apply.
 - Alias names are output names only.
 - Never SELECT an alias as a source column.
@@ -118,9 +129,14 @@ def build_sql_prompt(
         )
         few_shot_examples = ENERGY_FEW_SHOT_EXAMPLES
 
+    # Only surface the quoting rule when the schema actually shows a quoted
+    # column name, so prompts for clean schemas remain unchanged.
+    identifier_quoting_rule = IDENTIFIER_QUOTING_RULE if '"' in schema else ""
+
     return SQL_PROMPT_TEMPLATE.format(
         question=question.strip(),
         schema=schema.strip(),
         dataset_profile_context=dataset_profile_context.strip(),
         few_shot_examples=few_shot_examples.strip(),
+        identifier_quoting_rule=identifier_quoting_rule,
     )

@@ -43,10 +43,10 @@ def test_build_reporter_prompt_contains_question_sql_result_and_rules():
     assert "Gunakan hanya informasi" in prompt
     assert "perlu pembanding historis" in prompt
     assert "Bulatkan angka desimal maksimal 2 atau 3 digit" in prompt
-    assert "kilowatt -> kW" in prompt
-    assert "kilowatt-hour -> kWh" in prompt
-    assert "Volt -> V" in prompt
-    assert "Ampere -> A" in prompt
+    # Units are tied to alias suffixes and inventing units is forbidden, so
+    # arbitrary datasets without a unit do not get a hallucinated kW/MW.
+    assert "_kw" in prompt and "_usd" in prompt
+    assert "Jangan pernah mengarang satuan" in prompt
     assert "1-3 kalimat" in prompt
     assert "Jika hasil query hanya satu nilai numerik" in prompt
     assert "Jangan menambahkan insight" in prompt

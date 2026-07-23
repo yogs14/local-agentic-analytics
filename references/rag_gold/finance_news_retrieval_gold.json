@@ -1,0 +1,679 @@
+[
+  {
+    "query_id": "R001",
+    "query": "Berita apa saja tentang saham GOOGL pada Juni 2020?",
+    "query_type": "ticker_month",
+    "labeling_hints": {
+      "ticker": "GOOGL",
+      "month": "2020-06"
+    },
+    "relevant_doc_ids": [
+      "528989f8f8028c2a87bd3d5e4bea095e8e1aac91d1a3f6d093a6d626f6567a83",
+      "479b66e58530b6431e401269879981ddb3d1aef85ea13c3f2fd8a04b525b0837",
+      "80a46bc9fff8b70f51e4f1cd2b866ad74173902addcc3617cd5b4bad12a4cf51"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "G9/G10 (Facebook-Snap, Twitter-Square) & berita hacker dikecualikan: headline tidak substantif tentang Google."
+  },
+  {
+    "query_id": "R002",
+    "query": "Berita apa saja tentang saham NFLX pada Juni 2020?",
+    "query_type": "ticker_month",
+    "labeling_hints": {
+      "ticker": "NFLX",
+      "month": "2020-06"
+    },
+    "relevant_doc_ids": [
+      "5f83beddc49079e82d7f676347e16f25bdcf98873cbc503e98a8333c54f8a9e7",
+      "4f44f86a366dc3ed2319a6e8743ce540a8a9192f5fcd98899c4ff65580dd338d",
+      "99458ca0c51ce1b12f1821bc48eb49a5e0fdfe307cbda7addbed5d11211265ef"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R003",
+    "query": "Berita apa saja tentang saham NVDA pada Juni 2020?",
+    "query_type": "ticker_month",
+    "labeling_hints": {
+      "ticker": "NVDA",
+      "month": "2020-06"
+    },
+    "relevant_doc_ids": [
+      "c669c243cc2ba57c4cfc9e126838206d59df984cb0a5443cf0d028664aa78764",
+      "672827dbb177e549bb741c2ec17e6aa4fb04893198b5be9c67486ab50836be6f",
+      "10cd0d51d86547352c7ac8882a993a31b12f70f111d4474cef6a82ca32bb9985",
+      "bcd91cb3e0ceca77063e1dd20f087536b8adbb5b200153a6320ce0865b06ac8b"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Item 'Market Stats in 5 Minutes' dikecualikan (snapshot pasar generik); cerita 'technology companies trading higher/lower' disertakan karena NVDA termasuk grup yang dimaksud."
+  },
+  {
+    "query_id": "R004",
+    "query": "Berita apa saja tentang saham NVDA pada Mei 2020?",
+    "query_type": "ticker_month",
+    "labeling_hints": {
+      "ticker": "NVDA",
+      "month": "2020-05"
+    },
+    "relevant_doc_ids": [
+      "9bb541790aa6c527474dcae70d41fa1249531e4f9f2ee9951c8d6a84048e9350"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Berita sektor semikonduktor; relevan tidak langsung bagi NVDA (borderline)."
+  },
+  {
+    "query_id": "R005",
+    "query": "Berita apa saja tentang saham TSLA pada Juni 2020?",
+    "query_type": "ticker_month",
+    "labeling_hints": {
+      "ticker": "TSLA",
+      "month": "2020-06"
+    },
+    "relevant_doc_ids": [
+      "5026cc9326d6f4fdc4bd4955db54f3dc6d8ca89cf95d0c47f2ff2bb77a8609dd",
+      "5a71693e96721ad5e8abb1d7651f90ca14b9c8c2deaddd0b7eec41ffec05cea5",
+      "cc1cf472c370fcce1e496ea5088223cf413838f6f45c8e4711aee7518c47ef35",
+      "8ce56f0501bc9f50aa5f6be3199e448afa1021be2c986bb4b09c7f7f22c1cfff",
+      "e0c3320cb9d77c4338b99471717d7a4e7df91d31518a89f1ecde60d26859a4fb",
+      "dfb96ca22809c966c00eed218752bc37849f1cbe0e6dfdcec7b02901286e8c90",
+      "3847139712e4cb2968b1d935cdc200422d07199503747372eb093c0e8a424929",
+      "f4ca1690ac25f0f9074fc8189cc57a5fc1a964dff8677d69ca1e354afd0b5b7a",
+      "307240d491c5bf48b5bfdeb33f69ff2a624e131a6e9f46e62e2e27c45b063c5c"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "GM $20B EV (26b67ceb) dikecualikan: tentang kompetitor, bukan Tesla."
+  },
+  {
+    "query_id": "R006",
+    "query": "Berita tentang laporan pendapatan (earnings) GOOGL",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "GOOGL"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Tidak ada dokumen earnings di korpus 40 headline."
+  },
+  {
+    "query_id": "R007",
+    "query": "Berita tentang laporan pendapatan (earnings) NFLX",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "NFLX"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Tidak ada dokumen earnings di korpus."
+  },
+  {
+    "query_id": "R008",
+    "query": "Berita tentang laporan pendapatan (earnings) NVDA",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "NVDA"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Tidak ada dokumen earnings di korpus."
+  },
+  {
+    "query_id": "R009",
+    "query": "Berita tentang laporan pendapatan (earnings) TSLA",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "TSLA"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Tidak ada dokumen earnings di korpus."
+  },
+  {
+    "query_id": "R010",
+    "query": "Berita tentang target harga analis untuk GOOGL",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "GOOGL"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Tidak ada dokumen target harga GOOGL di korpus."
+  },
+  {
+    "query_id": "R011",
+    "query": "Berita tentang target harga analis untuk NFLX",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "NFLX"
+    },
+    "relevant_doc_ids": [
+      "99458ca0c51ce1b12f1821bc48eb49a5e0fdfe307cbda7addbed5d11211265ef"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R012",
+    "query": "Berita tentang target harga analis untuk NVDA",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "NVDA"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "c669c243 (BofA buy rating) dikecualikan: rating tanpa target harga eksplisit (borderline)."
+  },
+  {
+    "query_id": "R013",
+    "query": "Berita tentang target harga analis untuk TSLA",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "TSLA"
+    },
+    "relevant_doc_ids": [
+      "dfb96ca22809c966c00eed218752bc37849f1cbe0e6dfdcec7b02901286e8c90",
+      "3847139712e4cb2968b1d935cdc200422d07199503747372eb093c0e8a424929",
+      "307240d491c5bf48b5bfdeb33f69ff2a624e131a6e9f46e62e2e27c45b063c5c"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "8ce56f05 (Journey to $1,000) dikecualikan: komentar milestone, bukan target analis (borderline)."
+  },
+  {
+    "query_id": "R014",
+    "query": "Berita tentang kenaikan harga saham GOOGL",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "GOOGL"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R015",
+    "query": "Berita tentang kenaikan harga saham NFLX",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "NFLX"
+    },
+    "relevant_doc_ids": [
+      "4f44f86a366dc3ed2319a6e8743ce540a8a9192f5fcd98899c4ff65580dd338d"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "5f83bedd (option bet upside) dikecualikan: ekspektasi, bukan kenaikan aktual (borderline)."
+  },
+  {
+    "query_id": "R016",
+    "query": "Berita tentang kenaikan harga saham NVDA",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "NVDA"
+    },
+    "relevant_doc_ids": [
+      "10cd0d51d86547352c7ac8882a993a31b12f70f111d4474cef6a82ca32bb9985",
+      "bcd91cb3e0ceca77063e1dd20f087536b8adbb5b200153a6320ce0865b06ac8b"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R017",
+    "query": "Berita tentang kenaikan harga saham TSLA",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "TSLA"
+    },
+    "relevant_doc_ids": [
+      "5026cc9326d6f4fdc4bd4955db54f3dc6d8ca89cf95d0c47f2ff2bb77a8609dd",
+      "8ce56f0501bc9f50aa5f6be3199e448afa1021be2c986bb4b09c7f7f22c1cfff",
+      "e0c3320cb9d77c4338b99471717d7a4e7df91d31518a89f1ecde60d26859a4fb",
+      "307240d491c5bf48b5bfdeb33f69ff2a624e131a6e9f46e62e2e27c45b063c5c"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R018",
+    "query": "Berita tentang penurunan harga saham GOOGL",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "GOOGL"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R019",
+    "query": "Berita tentang penurunan harga saham NFLX",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "NFLX"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "4f44f86a menyebut sell-off tapi topik utamanya rebound; dikecualikan."
+  },
+  {
+    "query_id": "R020",
+    "query": "Berita tentang penurunan harga saham NVDA",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "NVDA"
+    },
+    "relevant_doc_ids": [
+      "672827dbb177e549bb741c2ec17e6aa4fb04893198b5be9c67486ab50836be6f"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R021",
+    "query": "Berita tentang penurunan harga saham TSLA",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "TSLA"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R022",
+    "query": "Berita tentang produk atau layanan baru GOOGL",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "GOOGL"
+    },
+    "relevant_doc_ids": [
+      "479b66e58530b6431e401269879981ddb3d1aef85ea13c3f2fd8a04b525b0837",
+      "80a46bc9fff8b70f51e4f1cd2b866ad74173902addcc3617cd5b4bad12a4cf51"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R023",
+    "query": "Berita tentang produk atau layanan baru NFLX",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "NFLX"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R024",
+    "query": "Berita tentang produk atau layanan baru NVDA",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "NVDA"
+    },
+    "relevant_doc_ids": [],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R025",
+    "query": "Berita tentang produk atau layanan baru TSLA",
+    "query_type": "thematic",
+    "labeling_hints": {
+      "ticker": "TSLA"
+    },
+    "relevant_doc_ids": [
+      "f4ca1690ac25f0f9074fc8189cc57a5fc1a964dff8677d69ca1e354afd0b5b7a"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "cc1cf472 (hack upgrade tidak resmi) dikecualikan (borderline)."
+  },
+  {
+    "query_id": "R026",
+    "query": "Berita GOOGL terkait Twitter Takes Trump Campaign's Video",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "GOOGL",
+      "seed_doc_id": "0315621b4895e7d322a3d9f247cab93e14754e16a793103250a9023ea17886a5",
+      "seed_headline": "Twitter Takes Down Trump Campaign's Video Tribute To George Floyd For Violating Copyright"
+    },
+    "relevant_doc_ids": [
+      "0315621b4895e7d322a3d9f247cab93e14754e16a793103250a9023ea17886a5"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R027",
+    "query": "Berita GOOGL terkait CNBC Publishes Article Titled States",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "GOOGL",
+      "seed_doc_id": "528989f8f8028c2a87bd3d5e4bea095e8e1aac91d1a3f6d093a6d626f6567a83",
+      "seed_headline": "CNBC Publishes Article Titled: States are Leaning Toward a Push to Break Up Google's Ad Tech Business"
+    },
+    "relevant_doc_ids": [
+      "528989f8f8028c2a87bd3d5e4bea095e8e1aac91d1a3f6d093a6d626f6567a83"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R028",
+    "query": "Berita GOOGL terkait Google Maps Offer Relevant Local",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "GOOGL",
+      "seed_doc_id": "80a46bc9fff8b70f51e4f1cd2b866ad74173902addcc3617cd5b4bad12a4cf51",
+      "seed_headline": "Google Maps To Offer Relevant Local COVID-19 Information For Public Transport, Driving And Testing Centers"
+    },
+    "relevant_doc_ids": [
+      "80a46bc9fff8b70f51e4f1cd2b866ad74173902addcc3617cd5b4bad12a4cf51",
+      "479b66e58530b6431e401269879981ddb3d1aef85ea13c3f2fd8a04b525b0837"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R029",
+    "query": "Berita GOOGL terkait UPDATE Chinese Government-Linked Hackers Recently",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "GOOGL",
+      "seed_doc_id": "a1ce34bad06deff37d90a02f853786b496563eddb84424a8ba062b2cadeeaca9",
+      "seed_headline": "UPDATE: Chinese Government-Linked Hackers Recently Attempted To Break Into Presidential Candidate Joe Biden"
+    },
+    "relevant_doc_ids": [
+      "a1ce34bad06deff37d90a02f853786b496563eddb84424a8ba062b2cadeeaca9",
+      "2d3f778e944ec72c4af960ab038e5ce4bb48b113faa0a00a791cd82ff9a648ea"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Dua headline hacker (Chinese/Iranian) satu klaster cerita (laporan Google TAG)."
+  },
+  {
+    "query_id": "R030",
+    "query": "Berita GOOGL terkait Iranian Government-Linked Hackers Recently Attempted",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "GOOGL",
+      "seed_doc_id": "2d3f778e944ec72c4af960ab038e5ce4bb48b113faa0a00a791cd82ff9a648ea",
+      "seed_headline": "Iranian Government-Linked Hackers Recently Attempted To break Into U.S. President Trump's Campaign Staff Email Accounts"
+    },
+    "relevant_doc_ids": [
+      "2d3f778e944ec72c4af960ab038e5ce4bb48b113faa0a00a791cd82ff9a648ea",
+      "a1ce34bad06deff37d90a02f853786b496563eddb84424a8ba062b2cadeeaca9"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Klaster yang sama dengan R029."
+  },
+  {
+    "query_id": "R031",
+    "query": "Berita GOOGL terkait Congress Stepping Efforts Kill Payday",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "GOOGL",
+      "seed_doc_id": "e9666d9aa3fc1d89be4557f41d22034669fd3085bc79743875acb29e1d470722",
+      "seed_headline": "Congress Is Stepping Up Its Efforts To Kill Payday Loans"
+    },
+    "relevant_doc_ids": [
+      "e9666d9aa3fc1d89be4557f41d22034669fd3085bc79743875acb29e1d470722"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R032",
+    "query": "Berita NFLX terkait ESPA Notas Semana Arrestos por",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NFLX",
+      "seed_doc_id": "019e02ce6353a4960e7f7f97211245575152a5357757d308c4eb5c1567b9bd7d",
+      "seed_headline": "ESPAÑOL • Notas de la Semana: Arrestos por Marihuana con Berner, Twista y Chris Webby, Leather Storrs, Trump, THCP, y Más"
+    },
+    "relevant_doc_ids": [
+      "019e02ce6353a4960e7f7f97211245575152a5357757d308c4eb5c1567b9bd7d"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R033",
+    "query": "Berita NFLX terkait Netflix shares trading higher. stock",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NFLX",
+      "seed_doc_id": "4f44f86a366dc3ed2319a6e8743ce540a8a9192f5fcd98899c4ff65580dd338d",
+      "seed_headline": "Netflix shares are trading higher. The stock sold off over the past month amid US business reopenings and appears to be rebounding."
+    },
+    "relevant_doc_ids": [
+      "4f44f86a366dc3ed2319a6e8743ce540a8a9192f5fcd98899c4ff65580dd338d"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R034",
+    "query": "Berita NFLX terkait Netflix Option Trader Makes Bet",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NFLX",
+      "seed_doc_id": "5f83beddc49079e82d7f676347e16f25bdcf98873cbc503e98a8333c54f8a9e7",
+      "seed_headline": "Netflix Option Trader Makes $73.6M Bet On 5% Upside"
+    },
+    "relevant_doc_ids": [
+      "5f83beddc49079e82d7f676347e16f25bdcf98873cbc503e98a8333c54f8a9e7"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R035",
+    "query": "Berita NFLX terkait Stocks Keep Rallying Even During",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NFLX",
+      "seed_doc_id": "9ae94607540713e7dfd84d8cfae44e274bd80b88cf855abb02213d9836e5e704",
+      "seed_headline": "Stocks Keep Rallying Even During Protests Because 'Nobody Is Investing To Make The World A Better Place,' Analysts Say"
+    },
+    "relevant_doc_ids": [
+      "9ae94607540713e7dfd84d8cfae44e274bd80b88cf855abb02213d9836e5e704"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R036",
+    "query": "Berita NFLX terkait Munster Says Under-The-Radar Apple Contribute",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NFLX",
+      "seed_doc_id": "73db9827c269449618eba7151d6ff5ad4d2f3492a018f366e198d1dfaabf06f7",
+      "seed_headline": "Munster Says Under-The-Radar Apple TV+ Will Contribute 20% Of Cupertino's Net Income Growth"
+    },
+    "relevant_doc_ids": [
+      "73db9827c269449618eba7151d6ff5ad4d2f3492a018f366e198d1dfaabf06f7"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R037",
+    "query": "Berita NFLX terkait Citron Genius Brands Lowest Form",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NFLX",
+      "seed_doc_id": "28484a8386e8d4bc2cace3068b4b4e8408fd14d6f0f2879eca4a0e3b11b0edd4",
+      "seed_headline": "Citron On Genius Brands: 'The Lowest Form Of Retail Investor'"
+    },
+    "relevant_doc_ids": [
+      "28484a8386e8d4bc2cace3068b4b4e8408fd14d6f0f2879eca4a0e3b11b0edd4",
+      "83e5ccb2974e24e5a904ef6f34ed886bb8c0c162b3acaeced5e1af88c8bbca75"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Dua headline Genius Brands satu klaster cerita."
+  },
+  {
+    "query_id": "R038",
+    "query": "Berita NVDA terkait Shares some technology companies trading",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NVDA",
+      "seed_doc_id": "672827dbb177e549bb741c2ec17e6aa4fb04893198b5be9c67486ab50836be6f",
+      "seed_headline": "Shares of some technology companies are trading lower despite market strength. The sector has performed well this year to date and appears to be giving back some gains following run up."
+    },
+    "relevant_doc_ids": [
+      "672827dbb177e549bb741c2ec17e6aa4fb04893198b5be9c67486ab50836be6f"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R039",
+    "query": "Berita NVDA terkait Afternoon Market Stats Minutes",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NVDA",
+      "seed_doc_id": "91e24f9d87dcb8312fd229cc9933c70d8924aa5dbce49ce0ca91a49c2971f5c3",
+      "seed_headline": "Afternoon Market Stats in 5 Minutes"
+    },
+    "relevant_doc_ids": [
+      "91e24f9d87dcb8312fd229cc9933c70d8924aa5dbce49ce0ca91a49c2971f5c3",
+      "79b0e19656128c51a65a6e0d7bdf9cbe120a9fb49d27f7c449d43347106dedb8"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Headline identik pada dua tanggal berbeda; keduanya relevan."
+  },
+  {
+    "query_id": "R040",
+    "query": "Berita NVDA terkait Semiconductor Industry Lobby Billions Boost",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NVDA",
+      "seed_doc_id": "9bb541790aa6c527474dcae70d41fa1249531e4f9f2ee9951c8d6a84048e9350",
+      "seed_headline": "Semiconductor Industry to Lobby for Billions to Boost U.S. Manufacturing"
+    },
+    "relevant_doc_ids": [
+      "9bb541790aa6c527474dcae70d41fa1249531e4f9f2ee9951c8d6a84048e9350"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R041",
+    "query": "Berita NVDA terkait Shares several technology companies trading",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NVDA",
+      "seed_doc_id": "bcd91cb3e0ceca77063e1dd20f087536b8adbb5b200153a6320ce0865b06ac8b",
+      "seed_headline": "Shares of several technology companies are trading higher on continued volatility despite market weakness. The sector sold off recently as other sectors gained amid US economic reopening and appears to be rebounding."
+    },
+    "relevant_doc_ids": [
+      "bcd91cb3e0ceca77063e1dd20f087536b8adbb5b200153a6320ce0865b06ac8b",
+      "10cd0d51d86547352c7ac8882a993a31b12f70f111d4474cef6a82ca32bb9985"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R042",
+    "query": "Berita NVDA terkait Morning Market Stats Minutes",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NVDA",
+      "seed_doc_id": "b2c08c7c5fefaf87c18015961392c7318e932cd70c20eb488d3f8851fce55e95",
+      "seed_headline": "Morning Market Stats in 5 Minutes"
+    },
+    "relevant_doc_ids": [
+      "b2c08c7c5fefaf87c18015961392c7318e932cd70c20eb488d3f8851fce55e95",
+      "5e1fd2756770017fd9db03b8d01147e4156616b4bb5297b28bff816b96a76356"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R043",
+    "query": "Berita NVDA terkait Afternoon Market Stats Minutes",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "NVDA",
+      "seed_doc_id": "79b0e19656128c51a65a6e0d7bdf9cbe120a9fb49d27f7c449d43347106dedb8",
+      "seed_headline": "Afternoon Market Stats in 5 Minutes"
+    },
+    "relevant_doc_ids": [
+      "79b0e19656128c51a65a6e0d7bdf9cbe120a9fb49d27f7c449d43347106dedb8",
+      "91e24f9d87dcb8312fd229cc9933c70d8924aa5dbce49ce0ca91a49c2971f5c3"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R044",
+    "query": "Berita TSLA terkait Tesla shares trading higher Wedbush",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "TSLA",
+      "seed_doc_id": "307240d491c5bf48b5bfdeb33f69ff2a624e131a6e9f46e62e2e27c45b063c5c",
+      "seed_headline": "Tesla shares are trading higher after Wedbush raised its price target on the company's stock from $800 to $1000."
+    },
+    "relevant_doc_ids": [
+      "307240d491c5bf48b5bfdeb33f69ff2a624e131a6e9f46e62e2e27c45b063c5c",
+      "3847139712e4cb2968b1d935cdc200422d07199503747372eb093c0e8a424929",
+      "dfb96ca22809c966c00eed218752bc37849f1cbe0e6dfdcec7b02901286e8c90"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "Tiga headline klaster Wedbush PT $1000."
+  },
+  {
+    "query_id": "R045",
+    "query": "Berita TSLA terkait Track Spend Development",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "TSLA",
+      "seed_doc_id": "26b67cebef63eb96793756734ec55f9425ae57f812ccbbd0fee157afd125c41b",
+      "seed_headline": "GM On Track To Spend $20B On EV And AV Development By 2025"
+    },
+    "relevant_doc_ids": [
+      "26b67cebef63eb96793756734ec55f9425ae57f812ccbbd0fee157afd125c41b"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R046",
+    "query": "Berita TSLA terkait Wedbush Says Tesla Has Game",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "TSLA",
+      "seed_doc_id": "dfb96ca22809c966c00eed218752bc37849f1cbe0e6dfdcec7b02901286e8c90",
+      "seed_headline": "Wedbush Says Tesla Has 'Game Changing' Developments, Lifts Target To $1,000"
+    },
+    "relevant_doc_ids": [
+      "dfb96ca22809c966c00eed218752bc37849f1cbe0e6dfdcec7b02901286e8c90",
+      "3847139712e4cb2968b1d935cdc200422d07199503747372eb093c0e8a424929",
+      "307240d491c5bf48b5bfdeb33f69ff2a624e131a6e9f46e62e2e27c45b063c5c"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  },
+  {
+    "query_id": "R047",
+    "query": "Berita TSLA terkait Musk Says It's Time Ramp",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "TSLA",
+      "seed_doc_id": "f4ca1690ac25f0f9074fc8189cc57a5fc1a964dff8677d69ca1e354afd0b5b7a",
+      "seed_headline": "Musk Says It's Time To Ramp Production Of Tesla Semi: Report"
+    },
+    "relevant_doc_ids": [
+      "f4ca1690ac25f0f9074fc8189cc57a5fc1a964dff8677d69ca1e354afd0b5b7a",
+      "5026cc9326d6f4fdc4bd4955db54f3dc6d8ca89cf95d0c47f2ff2bb77a8609dd"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "5026cc93 disertakan karena headline eksplisit menyebut 'Musk Pushes Semi' (borderline)."
+  },
+  {
+    "query_id": "R048",
+    "query": "Berita TSLA terkait Tesla's Stock Closes All-Time High",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "TSLA",
+      "seed_doc_id": "5026cc9326d6f4fdc4bd4955db54f3dc6d8ca89cf95d0c47f2ff2bb77a8609dd",
+      "seed_headline": "Tesla's Stock Closes At All-Time High As Musk Pushes Semi, Employees Reportedly Test Positive For COVID-19"
+    },
+    "relevant_doc_ids": [
+      "5026cc9326d6f4fdc4bd4955db54f3dc6d8ca89cf95d0c47f2ff2bb77a8609dd",
+      "e0c3320cb9d77c4338b99471717d7a4e7df91d31518a89f1ecde60d26859a4fb",
+      "8ce56f0501bc9f50aa5f6be3199e448afa1021be2c986bb4b09c7f7f22c1cfff"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia",
+    "label_note": "8ce56f05 (Journey to $1,000) disertakan sebagai bagian cerita all-time high (borderline)."
+  },
+  {
+    "query_id": "R049",
+    "query": "Berita TSLA terkait Wedbush Maintains Neutral Tesla Raises",
+    "query_type": "headline_seeded",
+    "labeling_hints": {
+      "ticker": "TSLA",
+      "seed_doc_id": "3847139712e4cb2968b1d935cdc200422d07199503747372eb093c0e8a424929",
+      "seed_headline": "Wedbush Maintains Neutral on Tesla, Raises Price Target to $1000"
+    },
+    "relevant_doc_ids": [
+      "3847139712e4cb2968b1d935cdc200422d07199503747372eb093c0e8a424929",
+      "dfb96ca22809c966c00eed218752bc37849f1cbe0e6dfdcec7b02901286e8c90",
+      "307240d491c5bf48b5bfdeb33f69ff2a624e131a6e9f46e62e2e27c45b063c5c"
+    ],
+    "label_source": "llm_draft_claude_2026-07-13; perlu verifikasi manusia"
+  }
+]

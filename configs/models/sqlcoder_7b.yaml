@@ -1,0 +1,18 @@
+# Specialized text-to-SQL comparator (Fase 4): "general SLM + scaffolding vs
+# dedicated SQL model". A 7B Q4 model (~4.1 GB weights + KV cache) exceeds the
+# GTX 1650's 4 GB VRAM, so cpu_only marks that benchmark numbers for this
+# model reflect CPU (or partial-offload) inference latency on the target
+# laptop - accuracy comparisons remain valid, latency is NOT comparable to
+# fully GPU-resident models.
+model:
+  key: sqlcoder_7b
+  ollama_tag: "sqlcoder:7b"
+  param_count: "7B"
+  quantization: "Q4_0"
+  context_window: 2048
+  temperature: 0.0
+  prompt_template: default
+  modelfile_sha256: null
+  source: base
+  kaggle_notebook_url: null
+  cpu_only: true

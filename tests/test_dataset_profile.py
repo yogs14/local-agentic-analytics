@@ -11,10 +11,32 @@ if str(SRC_DIR) not in sys.path:
 
 from local_agentic_analytics.core import dataset_profile
 from local_agentic_analytics.core.dataset_profile import (
+    ColumnProfile,
+    DatasetProfile,
     load_dataset_profile,
     profile_to_compact_sql_context,
     profile_to_prompt_context,
 )
+
+
+def _generic_profile() -> DatasetProfile:
+    return DatasetProfile(
+        name="rendo",
+        domain="custom",
+        table_name="rendo_electricity_2013_2",
+        datetime_column="",  # type: ignore[arg-type]
+        columns={
+            "net_manager": ColumnProfile(
+                name="net_manager", type="integer", semantic_type="integer"
+            ),
+            "street": ColumnProfile(
+                name="street", type="string", semantic_type="categorical"
+            ),
+            "num_connections": ColumnProfile(
+                name="num_connections", type="numeric", semantic_type="numeric"
+            ),
+        },
+    )
 
 
 def test_load_dataset_profile_reads_energy_profile():
@@ -96,6 +118,27 @@ def test_finance_compact_sql_context_uses_finance_table_and_rules():
     assert "CAST(date AS DATE) = DATE 'YYYY-MM-DD'" in context
     assert "electric_power" not in context
     assert "Global_active_power" not in context
+
+
+def test_generic_compact_context_lists_numeric_and_text_columns():
+    context = profile_to_compact_sql_context(_generic_profile())
+
+    assert "numeric_columns: net_manager, num_connections" in context
+    assert "text_columns: street" in context
+    assert "Always start the query with SELECT" in context
+    assert "read FROM rendo_electricity_2013_2" in context
+    assert "never aggregate text_columns" in context
+
+
+def test_curated_domains_do_not_get_generic_type_guidance():
+    energy = profile_to_compact_sql_context(load_dataset_profile("energy"))
+    finance = profile_to_compact_sql_context(load_dataset_profile("finance"))
+
+    # The gate keeps curated-domain prompts byte-identical (no new sections).
+    for context in (energy, finance):
+        assert "numeric_columns:" not in context
+        assert "text_columns:" not in context
+        assert "Always start the query with SELECT" not in context
 
 
 def test_load_dataset_profile_raises_for_missing_domain(tmp_path, monkeypatch):

@@ -1,0 +1,11 @@
+model:
+  key: qwen2.5_1.5b
+  ollama_tag: "qwen2.5:1.5b"
+  param_count: "1.5B"
+  quantization: "Q4_K_M"
+  context_window: 2048
+  temperature: 0.0
+  prompt_template: default
+  modelfile_sha256: null
+  source: base
+  kaggle_notebook_url: null

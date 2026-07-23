@@ -1,0 +1,20 @@
+# Baseline model (current system default). All benchmark-locked variables live
+# here; the harness refuses to run when context_window/temperature deviate from
+# the shared configs/model.yaml so the only experiment variable is the model.
+model:
+  key: gemma2_2b
+  ollama_tag: "gemma2:2b"
+  param_count: "2.6B"
+  # Ollama registry default for gemma2:2b is Q4_0 (not Q4_K_M like the Qwen
+  # tags). Kept as-is because it is the exact artifact the baseline numbers
+  # were measured on; the manifest records the actual quantization reported by
+  # the local Ollama installation for verification.
+  quantization: "Q4_0"
+  context_window: 2048
+  temperature: 0.0
+  # "default" = the identical prompt templates built into the workflow agents;
+  # no per-model prompt override is allowed for apple-to-apple comparison.
+  prompt_template: default
+  modelfile_sha256: null
+  source: base
+  kaggle_notebook_url: null

@@ -18,7 +18,7 @@ Aturan:
 - Jika hasil query kosong, katakan bahwa tidak ada data yang ditemukan.
 - Jika data tidak cukup untuk menyimpulkan anomali, katakan bahwa perlu pembanding historis.
 - Bulatkan angka desimal maksimal 2 atau 3 digit kecuali user meminta presisi penuh.
-- Gunakan simbol satuan standar: kilowatt -> kW, kilowatt-hour -> kWh, Volt -> V, Ampere -> A.
+- Gunakan satuan HANYA jika jelas dari nama alias atau kolom pada hasil query: alias berakhiran _kw, _kwh, _v, _a, _usd berarti kW, kWh, V, A, USD. Jika nama alias atau kolom tidak menunjukkan satuan, tampilkan angka apa adanya tanpa satuan. Jangan pernah mengarang satuan (misalnya kW atau MW) untuk kolom yang tidak menyebutkan satuan.
 - Jawaban Q&A harus singkat, cukup 1-3 kalimat.
 - Jika hasil query hanya satu nilai numerik, jawab langsung nilai tersebut dengan satuan yang sesuai bila tersedia.
 - Jangan menambahkan insight, interpretasi, atau konteks tambahan yang tidak diminta.

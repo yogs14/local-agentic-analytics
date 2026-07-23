@@ -27,6 +27,7 @@ from local_agentic_analytics.agents.rule_based_sql_resolver import (
     _parse_date,
 )
 from local_agentic_analytics.agents.sql_agent import SQLAgent
+from local_agentic_analytics.agents.sql_cleaning import quote_known_identifiers
 from local_agentic_analytics.core.config import PROJECT_ROOT, load_config
 from local_agentic_analytics.core.pipeline_toggles import PipelineToggles
 from local_agentic_analytics.core.dataset_profile import (
@@ -47,6 +48,7 @@ from local_agentic_analytics.tools.chromadb_tool import (
     ChromaDBTool,
 )
 from local_agentic_analytics.tools.duckdb_tool import DuckDBTool
+from local_agentic_analytics.tools.ollama_tool import OllamaTool
 from local_agentic_analytics.tools.sql_semantic_guard import (
     validate_energy_sql_semantics,
 )
@@ -55,6 +57,14 @@ from local_agentic_analytics.tools.sql_semantic_guard import (
 T = TypeVar("T")
 DEFAULT_TABLE_NAME = "electric_power"
 DEFAULT_MAX_REPORT_ROWS = 20
+# SQL generation token budget. Wide datasets (e.g. "average of every numeric
+# column" over a 17-column table) need a long projection list, so the budget is
+# sized to the schema instead of a flat cap that truncated the query mid-FROM.
+# Narrow tables keep the historical floor; the ceiling leaves prompt headroom in
+# the model context window.
+MIN_SQL_MAX_TOKENS = 96
+MAX_SQL_MAX_TOKENS = 768
+SQL_TOKENS_PER_COLUMN = 24
 DEFAULT_RAG_TOP_K = 5
 NEWS_COLLECTION_NAME = "finance_news"
 # Marker handed to the reporter when no SQL was executed (RAG-only answer).
@@ -83,12 +93,20 @@ class SequentialAnalyticsWorkflow:
         chroma_tool: ChromaDBTool | None = None,
         news_collection_name: str = NEWS_COLLECTION_NAME,
         rag_top_k: int = DEFAULT_RAG_TOP_K,
+        model_name: str | None = None,
     ):
         if table_name is not None and not table_name.strip():
             raise ValueError("table_name must not be empty")
         if max_report_rows < 1:
             raise ValueError("max_report_rows must be greater than 0")
 
+        # When set (e.g. picked in the frontend model selector), every LLM call
+        # in this workflow run (SQL generation, repair, reporter, planner) uses
+        # this Ollama tag instead of the configs/model.yaml default. None keeps
+        # each agent building its own default OllamaTool, unchanged.
+        self._model_override_tool = (
+            OllamaTool.from_config(model_override=model_name) if model_name else None
+        )
         self.toggles = toggles or PipelineToggles()
         self.domain = domain.strip() if domain else "energy"
         # Energy returns None here (prompt path unchanged); finance auto-loads
@@ -109,19 +127,26 @@ class SequentialAnalyticsWorkflow:
         if not resolved_table_name or not resolved_table_name.strip():
             resolved_table_name = DEFAULT_TABLE_NAME
 
+        sql_token_budget = _sql_token_budget(self.dataset_profile)
         self.duckdb_tool = duckdb_tool or DuckDBTool(str(_load_default_db_path()))
         self.sql_agent = sql_agent or SQLAgent(
             dataset_profile_context=self.dataset_profile_context,
             domain_adapter=self.domain_adapter,
             apply_domain_normalization=self.toggles.apply_domain_normalization,
+            max_tokens=sql_token_budget,
+            ollama_tool=self._model_override_tool,
         )
         self.rule_based_sql_resolver = (
             rule_based_sql_resolver or RuleBasedSQLResolver()
         )
         self.repair_agent = repair_agent or SQLRepairAgent(
             apply_domain_normalization=self.toggles.apply_domain_normalization,
+            max_tokens=sql_token_budget,
+            ollama_tool=self._model_override_tool,
         )
-        self.reporter_agent = reporter_agent or ReporterAgent()
+        self.reporter_agent = reporter_agent or ReporterAgent(
+            ollama_tool=self._model_override_tool
+        )
         self.table_name = resolved_table_name.strip()
         self.max_report_rows = max_report_rows
         self.audit_logger = audit_logger or ToolAuditLogger()
@@ -214,6 +239,8 @@ class SequentialAnalyticsWorkflow:
                     self.sql_agent, "last_raw_generated_sql", None
                 )
 
+            state.generated_sql = self._quote_sql_identifiers(state.generated_sql)
+
             try:
                 if self.toggles.use_semantic_guard:
                     self._run_step(
@@ -261,6 +288,7 @@ class SequentialAnalyticsWorkflow:
                         self.repair_agent
                     ),
                 )
+                state.repaired_sql = self._quote_sql_identifiers(state.repaired_sql)
                 if self.toggles.use_semantic_guard:
                     self._run_step(
                         state,
@@ -520,13 +548,24 @@ class SequentialAnalyticsWorkflow:
 
     def _get_planner_agent(self) -> PlannerAgent:
         if self._planner_agent is None:
-            self._planner_agent = PlannerAgent()
+            self._planner_agent = PlannerAgent(ollama_tool=self._model_override_tool)
         return self._planner_agent
 
     def _get_chroma_tool(self) -> ChromaDBTool:
         if self._chroma_tool is None:
             self._chroma_tool = _build_news_chroma_tool(self.news_collection_name)
         return self._chroma_tool
+
+    def _quote_sql_identifiers(self, sql: str | None) -> str | None:
+        """Wrap bare references to columns whose names DuckDB requires quoted.
+
+        This is a deterministic correctness pass for arbitrary datasets: column
+        names with spaces or punctuation (e.g. ``Hydroelectric Power``) are
+        rewritten to their double-quoted form. Clean schemas are unaffected.
+        """
+        if not sql:
+            return sql
+        return quote_known_identifiers(sql, self.dataset_profile.columns.keys())
 
     def _validate_sql_semantics(self, question: str, sql: str) -> str:
         if self.dataset_profile.domain.lower() != "energy":
@@ -673,6 +712,19 @@ def dataframe_to_compact_result(
         "rows": records,
         "truncated": len(dataframe) > max_rows,
     }
+
+
+def _sql_token_budget(profile: DatasetProfile) -> int:
+    """Size the SQL generation token budget to the table width.
+
+    A wide projection (one ``AVG(...)`` per column) on a many-column table needs
+    far more than the historical 96-token cap, which truncated such queries
+    mid-statement. Narrow tables keep the floor; the result is clamped so the
+    output still fits comfortably alongside the prompt in the model context.
+    """
+    column_count = len(profile.columns)
+    scaled = SQL_TOKENS_PER_COLUMN * column_count + 64
+    return max(MIN_SQL_MAX_TOKENS, min(MAX_SQL_MAX_TOKENS, scaled))
 
 
 def _load_default_db_path() -> Path:

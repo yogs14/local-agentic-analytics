@@ -40,6 +40,27 @@ def test_register_csv_get_schema_and_sample_rows(tmp_path):
         tool.close()
 
 
+def test_get_schema_quotes_columns_with_spaces(tmp_path):
+    csv_path = tmp_path / "renewable.csv"
+    csv_path.write_text(
+        "Year,Hydroelectric Power,Solar Energy\n1973,1.0,0.0\n",
+        encoding="utf-8",
+    )
+    tool = DuckDBTool(str(tmp_path / "analytics.duckdb"))
+
+    try:
+        tool.connect()
+        tool.register_csv_as_table(str(csv_path), "renewable")
+        schema = tool.get_schema("renewable")
+
+        # Names needing quotes are shown quoted; clean names are left bare.
+        assert '"Hydroelectric Power":' in schema
+        assert '"Solar Energy":' in schema
+        assert "\nYear:" in schema
+    finally:
+        tool.close()
+
+
 def test_execute_query_returns_dataframe(tmp_path):
     tool = DuckDBTool(str(tmp_path / "analytics.duckdb"))
 

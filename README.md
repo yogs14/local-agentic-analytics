@@ -176,7 +176,7 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-`requirements.txt` mencakup dependency untuk domain finance (mis. `yfinance` untuk ingestion harga saham). Embedding RAG memakai `sentence-transformers/all-MiniLM-L6-v2` yang dikonfigurasi di `configs/chromadb.yaml`; Ollama hanya dipakai untuk text generation, bukan embedding.
+`requirements.txt` mencakup dependency untuk domain finance (mis. `yfinance` untuk ingestion harga saham). Embedding RAG memakai `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` yang dikonfigurasi di `configs/chromadb.yaml` (diganti dari `all-MiniLM-L6-v2` per hasil ablasi embedding pada gold retrieval terverifikasi — lihat `reports/experiments/rag_embedding_ablation.csv`); Ollama hanya dipakai untuk text generation, bukan embedding.
 
 Pastikan Ollama berjalan dan model tersedia.
 
@@ -415,3 +415,39 @@ reports/experiments/end_to_end_benchmark_summary.json
 - Menambahkan evaluasi kualitas narasi insight dan laporan.
 - Menambahkan UI atau API server jika workflow inti sudah stabil.
 - Memperluas cakupan domain dan benchmark tanpa mengubah prinsip sequential execution.
+
+## 15. Reproduksi Eksperimen
+
+Seluruh eksperimen benchmark dapat direproduksi dari manifest yang direkam
+per run. Artefak reproducibility:
+
+- `requirements.lock` — hasil `pip freeze` environment yang dipakai.
+- `references/CHECKSUMS.txt` — SHA256 semua file gold/eval
+  (`references/sql_gold/*.json|*.sql`, `references/rag_gold/*.json`).
+- `reports/experiments/model_benchmark*/<model>/manifest.json` — per run:
+  commit hash, SHA256 dataset gold, config model, versi Ollama, hardware,
+  timestamp, dan catatan seed (temperature 0.0, tanpa seed eksplisit;
+  non-determinisme GPU dimitigasi dengan repeats >= 3 dan pelaporan std).
+
+Satu perintah reproduksi per fase (validasi dulu dengan `--dry-run`):
+
+```powershell
+# Fase 1: benchmark multi-model (memverifikasi hash gold set vs manifest dulu)
+./.venv/Scripts/python.exe scripts/reproduce_all.py --phase 1 --dry-run
+./.venv/Scripts/python.exe scripts/reproduce_all.py --phase 1
+
+# Fase 2: taksonomi error; Fase 3: verifikasi gold + cross-check pandas
+./.venv/Scripts/python.exe scripts/reproduce_all.py --phase 2 --phase 3
+
+# Fase 4: prompting comparison + RAG eval (butuh label manual rag_gold)
+./.venv/Scripts/python.exe scripts/reproduce_all.py --phase 4
+
+# Fase 5: verifikasi checksum file gold/eval
+./.venv/Scripts/python.exe scripts/reproduce_all.py --phase 5
+```
+
+Catatan: jalankan satu proses pada satu waktu — `analytics.duckdb` memakai
+lock read-write satu-proses, sehingga benchmark, eval, dan tes yang menyentuh
+database tidak boleh berjalan paralel. Resep fine-tune terstandar (dataset
+hash, LoRA, GGUF Q4_K_M, Modelfile) ada di `docs/finetune_recipe.md`;
+justifikasi pemilihan model berbasis data ada di `docs/model_selection.md`.

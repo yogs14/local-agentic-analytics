@@ -60,12 +60,31 @@ class OllamaTool:
         self.last_metrics: dict[str, float | int] = {}
 
     @classmethod
-    def from_config(cls, config_path: str = "model.yaml") -> "OllamaTool":
-        """Build an Ollama tool from ``configs/model.yaml``."""
+    def from_config(
+        cls,
+        config_path: str = "model.yaml",
+        section: str = "model",
+        model_override: str | None = None,
+    ) -> "OllamaTool":
+        """Build an Ollama tool from ``configs/model.yaml``.
+
+        ``section`` selects which mapping in the YAML drives the tool (default
+        ``model``). A named section that is missing falls back to ``model`` so
+        callers can request an optional override (e.g. ``insight_model``) without
+        every config file having to define it.
+
+        ``model_override``, when set, replaces the configured model tag (e.g.
+        ``qwen2.5:1.5b`` picked from the API) while every other setting
+        (base_url, timeout, context window, ...) keeps coming from config.
+        """
         load_dotenv(PROJECT_ROOT / ".env.example", override=False)
         load_dotenv(PROJECT_ROOT / ".env", override=False)
         config = load_config(config_path)
-        model_config = config.get("model", {})
+        model_config = config.get(section)
+        if model_config is None and section != "model":
+            model_config = config.get("model", {})
+        if model_config is None:
+            model_config = {}
 
         if not isinstance(model_config, dict):
             raise ValueError("model config must be a mapping")
@@ -77,9 +96,12 @@ class OllamaTool:
         base_url = _resolve_config_value(
             model_config.get("base_url"), field_name="model.base_url"
         )
-        model = _resolve_config_value(
-            model_config.get("name"), field_name="model.name"
-        )
+        if model_override is not None and model_override.strip():
+            model = model_override.strip()
+        else:
+            model = _resolve_config_value(
+                model_config.get("name"), field_name="model.name"
+            )
         timeout_seconds = _resolve_int_config_value(
             model_config.get("timeout_seconds", 120),
             field_name="model.timeout_seconds",
@@ -112,6 +134,24 @@ class OllamaTool:
             return response.ok
         except requests.RequestException:
             return False
+
+    def list_installed_tags(self) -> set[str]:
+        """Return the set of model tags currently pulled in the local Ollama.
+
+        Empty set when Ollama is unreachable — callers treat that as "unknown"
+        rather than raising, since this only feeds an informational /models list.
+        """
+        try:
+            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            response.raise_for_status()
+            data = response.json()
+        except (requests.RequestException, ValueError):
+            return set()
+        return {
+            str(entry.get("name", ""))
+            for entry in data.get("models", [])
+            if entry.get("name")
+        }
 
     def generate(
         self,

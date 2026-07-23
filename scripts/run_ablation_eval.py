@@ -64,14 +64,18 @@ def parse_args() -> argparse.Namespace:
 def print_summary(summary: dict[str, Any]) -> None:
     configs = summary.get("configs", {})
     print("\nAblation summary (model vs scaffolding):")
-    header = f"{'config':<26} {'total':>5} {'exec_success':>13} {'numeric_match':>14}"
+    header = (
+        f"{'config':<26} {'total':>5} {'exec_success':>13} "
+        f"{'numeric_match':>14} {'result_full':>12}"
+    )
     print(header)
     print("-" * len(header))
     for name, stats in configs.items():
         print(
             f"{name:<26} {stats['total']:>5} "
             f"{stats['execution_success_rate']:>12.1%} "
-            f"{stats['numeric_match_rate']:>13.1%}"
+            f"{stats['numeric_match_rate']:>13.1%} "
+            f"{stats.get('result_match_full_rate', 0.0):>11.1%}"
         )
 
     route = summary.get("d_full_route_distribution", {})

@@ -10,7 +10,39 @@ if str(SRC_DIR) not in sys.path:
 from local_agentic_analytics.agents.rule_based_sql_resolver import (
     RuleBasedSQLResolver,
 )
-from local_agentic_analytics.core.dataset_profile import load_dataset_profile
+from local_agentic_analytics.core.dataset_profile import (
+    ColumnProfile,
+    DatasetProfile,
+    load_dataset_profile,
+)
+
+
+def _mixed_profile_without_datetime() -> DatasetProfile:
+    """A custom CSV profile with numeric and text columns and no datetime."""
+    columns = {
+        "net_manager": ColumnProfile(
+            name="net_manager", type="integer", semantic_type="integer"
+        ),
+        "street": ColumnProfile(
+            name="street", type="string", semantic_type="categorical"
+        ),
+        "zipcode_from": ColumnProfile(
+            name="zipcode_from", type="string", semantic_type="categorical"
+        ),
+        "num_connections": ColumnProfile(
+            name="num_connections", type="numeric", semantic_type="numeric"
+        ),
+        "annual_consume": ColumnProfile(
+            name="annual_consume", type="integer", semantic_type="integer"
+        ),
+    }
+    return DatasetProfile(
+        name="rendo",
+        domain="custom",
+        table_name="rendo_electricity_2013_2",
+        datetime_column="",  # type: ignore[arg-type]
+        columns=columns,
+    )
 
 
 def test_resolver_generates_average_active_power_sql_for_indonesian_date():
@@ -154,6 +186,99 @@ def test_resolver_generates_finance_missing_value_sql_when_column_is_named():
         "SELECT COUNT(*) FILTER (WHERE close IS NULL) "
         "AS missing_close_count\n"
         "FROM stock_prices;"
+    )
+
+
+def test_resolver_averages_only_numeric_columns_without_datetime():
+    resolver = RuleBasedSQLResolver()
+    profile = _mixed_profile_without_datetime()
+
+    sql = resolver.resolve("Tampilkan rata-rata dari setiap kolom numerik.", profile)
+
+    # Text columns (street, zipcode_from) must be excluded to avoid avg(VARCHAR).
+    assert sql == (
+        'SELECT AVG("net_manager") AS avg_net_manager, '
+        'AVG("num_connections") AS avg_num_connections, '
+        'AVG("annual_consume") AS avg_annual_consume\n'
+        "FROM rendo_electricity_2013_2;"
+    )
+
+
+def test_resolver_numeric_summary_matches_english_phrasing():
+    resolver = RuleBasedSQLResolver()
+    profile = _mixed_profile_without_datetime()
+
+    sql = resolver.resolve("Show the average of all numeric columns", profile)
+
+    assert sql is not None
+    assert sql.startswith('SELECT AVG("net_manager")')
+
+
+def test_resolver_numeric_summary_quotes_spaced_columns():
+    resolver = RuleBasedSQLResolver()
+    profile = DatasetProfile(
+        name="renewable",
+        domain="custom",
+        table_name="renewable",
+        datetime_column="",  # type: ignore[arg-type]
+        columns={
+            "Sector": ColumnProfile(
+                name="Sector", type="string", semantic_type="categorical"
+            ),
+            "Solar Energy": ColumnProfile(
+                name="Solar Energy", type="numeric", semantic_type="numeric"
+            ),
+        },
+    )
+
+    sql = resolver.resolve("rata-rata setiap kolom numerik", profile)
+
+    assert sql == 'SELECT AVG("Solar Energy") AS avg_solar_energy\nFROM renewable;'
+
+
+def test_resolver_null_per_column_without_datetime():
+    resolver = RuleBasedSQLResolver()
+    profile = _mixed_profile_without_datetime()
+
+    sql = resolver.resolve("adakah null value dari tiap kolom?", profile)
+
+    # Every column (numeric and text) gets a null count, with SELECT and FROM.
+    assert sql == (
+        "SELECT "
+        "COUNT(*) FILTER (WHERE net_manager IS NULL) AS missing_net_manager_count, "
+        "COUNT(*) FILTER (WHERE street IS NULL) AS missing_street_count, "
+        "COUNT(*) FILTER (WHERE zipcode_from IS NULL) AS missing_zipcode_from_count, "
+        "COUNT(*) FILTER (WHERE num_connections IS NULL) "
+        "AS missing_num_connections_count, "
+        "COUNT(*) FILTER (WHERE annual_consume IS NULL) "
+        "AS missing_annual_consume_count\n"
+        "FROM rendo_electricity_2013_2;"
+    )
+
+
+def test_resolver_null_recognized_as_missing_value_keyword():
+    resolver = RuleBasedSQLResolver()
+    profile = _mixed_profile_without_datetime()
+
+    # "null" alone (no "missing value"/"nilai hilang") must still be handled.
+    assert resolver.resolve("berapa null di semua kolom?", profile) is not None
+
+
+def test_resolver_numeric_summary_does_not_shadow_energy_rule():
+    resolver = RuleBasedSQLResolver()
+    profile = load_dataset_profile()
+
+    # "rata-rata daya aktif" must still resolve to the energy-specific rule,
+    # not the generic numeric-summary path.
+    sql = resolver.resolve(
+        "Berapa rata-rata daya aktif pada tanggal 16 Desember 2006?",
+        profile,
+    )
+
+    assert sql == (
+        "SELECT AVG(Global_active_power) AS avg_global_active_power_kw\n"
+        "FROM electric_power\n"
+        "WHERE CAST(datetime AS DATE) = DATE '2006-12-16';"
     )
 
 

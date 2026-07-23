@@ -1,0 +1,362 @@
+[
+  {
+    "id": "E101",
+    "question": "What is the average active power on 15 January 2007?",
+    "gold_sql_file": "references/sql_gold/E101.sql",
+    "expected_unit": "kW",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "resolver_eligible": "yes",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E102",
+    "question": "What is the total energy in kWh on 29 February 2008 based on Global_active_power?",
+    "gold_sql_file": "references/sql_gold/E102.sql",
+    "expected_unit": "kWh",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "resolver_eligible": "yes",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E103",
+    "question": "What is the average voltage on 4 July 2009?",
+    "gold_sql_file": "references/sql_gold/E103.sql",
+    "expected_unit": "V",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E104",
+    "question": "What is the average current intensity on 21 March 2010?",
+    "gold_sql_file": "references/sql_gold/E104.sql",
+    "expected_unit": "A",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E105",
+    "question": "What is the maximum active power on 15 June 2007?",
+    "gold_sql_file": "references/sql_gold/E105.sql",
+    "expected_unit": "kW",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E106",
+    "question": "What is the average Global_active_power between hour 18 and 20 on 20 January 2007?",
+    "gold_sql_file": "references/sql_gold/E106.sql",
+    "expected_unit": "kW",
+    "category": "hour_filter",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E107",
+    "question": "What is the electricity consumption in kWh at hour 19 (19:00-19:59) on 20 January 2007 based on Global_active_power?",
+    "gold_sql_file": "references/sql_gold/E107.sql",
+    "expected_unit": "kWh",
+    "category": "hour_filter",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E108",
+    "question": "At which hour was the average Global_active_power highest on 1 February 2007?",
+    "gold_sql_file": "references/sql_gold/E108.sql",
+    "expected_unit": "hour",
+    "category": "groupby_limit",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "row"
+  },
+  {
+    "id": "E109",
+    "question": "Show the average Global_active_power per hour on 1 February 2007.",
+    "gold_sql_file": "references/sql_gold/E109.sql",
+    "expected_unit": "kW",
+    "category": "hour_filter",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "table"
+  },
+  {
+    "id": "E110",
+    "question": "What is the average active power throughout January 2007?",
+    "gold_sql_file": "references/sql_gold/E110.sql",
+    "expected_unit": "kW",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E111",
+    "question": "What is the total energy in kWh throughout August 2008?",
+    "gold_sql_file": "references/sql_gold/E111.sql",
+    "expected_unit": "kWh",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E112",
+    "question": "Show the average voltage per month throughout 2007.",
+    "gold_sql_file": "references/sql_gold/E112.sql",
+    "expected_unit": "V",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "table"
+  },
+  {
+    "id": "E113",
+    "question": "Show the total energy in kWh per month in 2009 ordered from the largest.",
+    "gold_sql_file": "references/sql_gold/E113.sql",
+    "expected_unit": "kWh",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "table"
+  },
+  {
+    "id": "E114",
+    "question": "Show the average active power for each day of the week throughout 2008.",
+    "gold_sql_file": "references/sql_gold/E114.sql",
+    "expected_unit": "kW",
+    "category": "weekly_aggregation",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table"
+  },
+  {
+    "id": "E115",
+    "question": "Show the total energy in kWh per ISO week in January 2007.",
+    "gold_sql_file": "references/sql_gold/E115.sql",
+    "expected_unit": "kWh",
+    "category": "weekly_aggregation",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table"
+  },
+  {
+    "id": "E116",
+    "question": "How many records have Global_active_power above 5 kW and Voltage below 235 V?",
+    "gold_sql_file": "references/sql_gold/E116.sql",
+    "expected_unit": "records",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E117",
+    "question": "What is the average voltage when the current intensity is above 10 A on 16 December 2006?",
+    "gold_sql_file": "references/sql_gold/E117.sql",
+    "expected_unit": "V",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E118",
+    "question": "How many records have Sub_metering_3 greater than 0 throughout December 2007?",
+    "gold_sql_file": "references/sql_gold/E118.sql",
+    "expected_unit": "records",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E119",
+    "question": "Show the 5 dates with the highest total energy in kWh throughout 2007.",
+    "gold_sql_file": "references/sql_gold/E119.sql",
+    "expected_unit": "kWh",
+    "category": "groupby_limit",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table"
+  },
+  {
+    "id": "E120",
+    "question": "Show the 3 hours with the highest average active power throughout 2008.",
+    "gold_sql_file": "references/sql_gold/E120.sql",
+    "expected_unit": "kW",
+    "category": "groupby_limit",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table"
+  },
+  {
+    "id": "E121",
+    "question": "When did the highest active power in the entire dataset occur?",
+    "gold_sql_file": "references/sql_gold/E121.sql",
+    "expected_unit": "timestamp",
+    "category": "extremes",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "row"
+  },
+  {
+    "id": "E122",
+    "question": "Compare the average active power of January in 2007, 2008, 2009, and 2010.",
+    "gold_sql_file": "references/sql_gold/E122.sql",
+    "expected_unit": "kW",
+    "category": "period_comparison",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table"
+  },
+  {
+    "id": "E123",
+    "question": "Show the total energy in kWh for each of the years 2007, 2008, and 2009.",
+    "gold_sql_file": "references/sql_gold/E123.sql",
+    "expected_unit": "kWh",
+    "category": "period_comparison",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table"
+  },
+  {
+    "id": "E124",
+    "question": "Compare the average voltage in June, July, and August 2007.",
+    "gold_sql_file": "references/sql_gold/E124.sql",
+    "expected_unit": "V",
+    "category": "period_comparison",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table"
+  },
+  {
+    "id": "E125",
+    "question": "What is the average of each of Sub_metering_1, Sub_metering_2, and Sub_metering_3 across the entire dataset?",
+    "gold_sql_file": "references/sql_gold/E125.sql",
+    "expected_unit": "Wh",
+    "category": "aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "row"
+  },
+  {
+    "id": "E126",
+    "question": "What is the total Sub_metering_3 consumption in Wh on 25 December 2009?",
+    "gold_sql_file": "references/sql_gold/E126.sql",
+    "expected_unit": "Wh",
+    "category": "daily_aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E127",
+    "question": "What is the standard deviation of active power on 14 July 2010?",
+    "gold_sql_file": "references/sql_gold/E127.sql",
+    "expected_unit": "kW",
+    "category": "statistics",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E128",
+    "question": "What is the median voltage on 14 July 2010?",
+    "gold_sql_file": "references/sql_gold/E128.sql",
+    "expected_unit": "V",
+    "category": "statistics",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E129",
+    "question": "How many unique days are recorded in the dataset?",
+    "gold_sql_file": "references/sql_gold/E129.sql",
+    "expected_unit": "count",
+    "category": "statistics",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E130",
+    "question": "When did the lowest voltage in the entire dataset occur?",
+    "gold_sql_file": "references/sql_gold/E130.sql",
+    "expected_unit": "timestamp",
+    "category": "extremes",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "row"
+  },
+  {
+    "id": "E131",
+    "question": "When did the highest current intensity in November 2010 occur?",
+    "gold_sql_file": "references/sql_gold/E131.sql",
+    "expected_unit": "timestamp",
+    "category": "extremes",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "row"
+  },
+  {
+    "id": "E132",
+    "question": "How many missing values are there in the Voltage column?",
+    "gold_sql_file": "references/sql_gold/E132.sql",
+    "expected_unit": "count",
+    "category": "missing_value",
+    "difficulty": "easy",
+    "resolver_eligible": "yes",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E133",
+    "question": "How many missing values are there in the whole dataset?",
+    "gold_sql_file": "references/sql_gold/E133.sql",
+    "expected_unit": "count",
+    "category": "missing_value",
+    "difficulty": "medium",
+    "resolver_eligible": "yes",
+    "result_shape": "row"
+  },
+  {
+    "id": "E134",
+    "question": "What percentage of minutes had active power above 4 kW throughout January 2007?",
+    "gold_sql_file": "references/sql_gold/E134.sql",
+    "expected_unit": "percent",
+    "category": "threshold",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E135",
+    "question": "How many records have Sub_metering_1 greater than 0 on 15 January 2007?",
+    "gold_sql_file": "references/sql_gold/E135.sql",
+    "expected_unit": "records",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  },
+  {
+    "id": "E136",
+    "question": "What is the difference between the maximum and minimum voltage on 4 July 2009?",
+    "gold_sql_file": "references/sql_gold/E136.sql",
+    "expected_unit": "V",
+    "category": "statistics",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar"
+  }
+]

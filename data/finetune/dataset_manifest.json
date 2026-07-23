@@ -1,0 +1,40 @@
+{
+  "generated_at": "2026-07-22T07:19:18+07:00",
+  "seed": 42,
+  "temperature": 0.4,
+  "note": "Seluruh gelombang memakai resep pembangkitan identik; yang berbeda hanya model guru. Hash memverifikasi berkas dataset yang diumpankan ke notebook fine-tune.",
+  "waves": {
+    "teacher_gemma": {
+      "teacher": "google/gemma-4-31b-it (sekeluarga)",
+      "kaggle_slug": "finetune-teacher-gemma",
+      "directory": "data/finetune/teacher_gemma",
+      "total_examples": 248,
+      "files": {
+        "train.jsonl": {
+          "sha256": "fb5d7f0f2c722d0a0e9b289ed73a1f0a6f8206c74a3fb4a6a772da6e2fd6e990",
+          "lines": 198
+        },
+        "val.jsonl": {
+          "sha256": "2bea66c92e3ec9f6119625bb95c3e70364aaeeaf7df9c4bfbee23a314fbed402",
+          "lines": 50
+        }
+      }
+    },
+    "teacher_qwen": {
+      "teacher": "Qwen/Qwen3.5-27B (sekeluarga)",
+      "kaggle_slug": "finetune-teacher-qwen",
+      "directory": "data/finetune/teacher_qwen",
+      "total_examples": 248,
+      "files": {
+        "train.jsonl": {
+          "sha256": "9b009f364cfec8a649561210825e510ea70bc9d9c0ef81f8ca2507cf0a9e2edb",
+          "lines": 198
+        },
+        "val.jsonl": {
+          "sha256": "46cffbd0f1f69708336ed60a031117b0575f4ebf4a42cb03bb8a4d1495e684c2",
+          "lines": 50
+        }
+      }
+    }
+  }
+}

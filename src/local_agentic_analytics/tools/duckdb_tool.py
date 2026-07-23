@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import duckdb
 import pandas as pd
+
+
+_SIMPLE_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 class DuckDBTool:
@@ -78,7 +82,8 @@ class DuckDBTool:
             raise ValueError(f"Failed to get schema for table '{table_name}': {exc}") from exc
 
         columns = "\n".join(
-            f"{column_name}: {column_type}" for column_name, column_type, *_ in rows
+            f"{self._schema_identifier(column_name)}: {column_type}"
+            for column_name, column_type, *_ in rows
         )
         return f"Table: {table_name}\nColumns:\n{columns}"
 
@@ -120,4 +125,16 @@ class DuckDBTool:
         if not identifier or not identifier.strip():
             raise ValueError("table_name must not be empty")
 
+        return '"' + identifier.replace('"', '""') + '"'
+
+    @staticmethod
+    def _schema_identifier(identifier: str) -> str:
+        """Render a column name for the prompt schema.
+
+        Names that need quoting in DuckDB (spaces, punctuation, leading digits)
+        are shown double-quoted so the model copies a valid reference. Bare
+        identifiers are left as-is, keeping clean schemas unchanged.
+        """
+        if _SIMPLE_IDENTIFIER_PATTERN.match(identifier):
+            return identifier
         return '"' + identifier.replace('"', '""') + '"'

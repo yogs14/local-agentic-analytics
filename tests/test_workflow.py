@@ -9,8 +9,16 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from local_agentic_analytics.core.dataset_profile import (
+    ColumnProfile,
+    DatasetProfile,
+)
+from local_agentic_analytics.core.pipeline_toggles import PipelineToggles
 from local_agentic_analytics.graph.workflow import (
+    MAX_SQL_MAX_TOKENS,
+    MIN_SQL_MAX_TOKENS,
     SequentialAnalyticsWorkflow,
+    _sql_token_budget,
     dataframe_to_compact_result,
 )
 
@@ -323,6 +331,109 @@ def test_workflow_fails_when_repaired_sql_also_fails():
     assert state.final_answer is None
     assert "repaired column not found" in state.error_message
     assert duckdb_tool.executed_sql == [failed_sql, repaired_sql]
+
+
+def _custom_profile_with_spaced_column() -> DatasetProfile:
+    return DatasetProfile(
+        name="renewable",
+        domain="custom",
+        table_name="renewable",
+        datetime_column="",  # type: ignore[arg-type]
+        columns={
+            "Year": ColumnProfile(
+                name="Year", type="integer", semantic_type="integer"
+            ),
+            "Hydroelectric Power": ColumnProfile(
+                name="Hydroelectric Power", type="numeric", semantic_type="numeric"
+            ),
+        },
+    )
+
+
+def test_workflow_quotes_special_column_identifiers_before_execution():
+    bare_sql = "SELECT AVG(Hydroelectric Power) AS avg_h FROM renewable"
+    quoted_sql = 'SELECT AVG("Hydroelectric Power") AS avg_h FROM renewable'
+    result_df = pd.DataFrame({"avg_h": [1.5]})
+    duckdb_tool = FakeDuckDBTool(results_by_sql={quoted_sql: result_df})
+    workflow = SequentialAnalyticsWorkflow(
+        duckdb_tool=duckdb_tool,
+        sql_agent=FakeSQLAgent(sql=bare_sql),
+        repair_agent=FakeRepairAgent(repaired_sql="SELECT 1"),
+        reporter_agent=FakeReporterAgent(answer="Rata-rata adalah 1,5."),
+        domain="custom",
+        dataset_profile=_custom_profile_with_spaced_column(),
+        table_name="renewable",
+        toggles=PipelineToggles(
+            use_rule_based_resolver=False, use_semantic_guard=False
+        ),
+    )
+
+    state = workflow.run("Tampilkan rata-rata Hydroelectric Power.")
+
+    assert state.success is True
+    # The bare model SQL is rewritten to a valid quoted query before execution.
+    assert state.generated_sql == quoted_sql
+    assert duckdb_tool.executed_sql == [quoted_sql]
+
+
+def _profile_with_n_columns(n: int) -> DatasetProfile:
+    columns = {
+        f"col_{i}": ColumnProfile(
+            name=f"col_{i}", type="numeric", semantic_type="numeric"
+        )
+        for i in range(n)
+    }
+    return DatasetProfile(
+        name="wide",
+        domain="custom",
+        table_name="wide",
+        datetime_column="",  # type: ignore[arg-type]
+        columns=columns,
+    )
+
+
+def test_sql_token_budget_keeps_floor_for_narrow_tables():
+    assert _sql_token_budget(_profile_with_n_columns(1)) == MIN_SQL_MAX_TOKENS
+
+
+def test_sql_token_budget_scales_with_column_count():
+    budget = _sql_token_budget(_profile_with_n_columns(17))
+    # Enough headroom for ~17 quoted AVG projections plus FROM clause.
+    assert budget > MIN_SQL_MAX_TOKENS
+    assert budget >= 17 * 16
+
+
+def test_sql_token_budget_is_capped_for_very_wide_tables():
+    assert _sql_token_budget(_profile_with_n_columns(500)) == MAX_SQL_MAX_TOKENS
+
+
+def test_workflow_gives_default_sql_agent_a_wide_token_budget(monkeypatch):
+    import local_agentic_analytics.graph.workflow as wf
+
+    captured: dict[str, int] = {}
+
+    class RecordingSQLAgent:
+        def __init__(self, **kwargs):
+            captured["sql"] = kwargs.get("max_tokens")
+
+    class RecordingRepairAgent:
+        def __init__(self, **kwargs):
+            captured["repair"] = kwargs.get("max_tokens")
+
+    monkeypatch.setattr(wf, "SQLAgent", RecordingSQLAgent)
+    monkeypatch.setattr(wf, "SQLRepairAgent", RecordingRepairAgent)
+
+    SequentialAnalyticsWorkflow(
+        duckdb_tool=FakeDuckDBTool(),
+        reporter_agent=FakeReporterAgent(),
+        domain="custom",
+        dataset_profile=_profile_with_n_columns(17),
+        table_name="wide",
+    )
+
+    expected = _sql_token_budget(_profile_with_n_columns(17))
+    assert captured["sql"] == expected
+    assert captured["repair"] == expected
 
 
 def test_dataframe_to_compact_result_truncates_preview_rows():

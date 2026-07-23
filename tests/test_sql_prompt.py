@@ -73,6 +73,25 @@ def test_build_sql_prompt_accepts_dataset_profile_context_override():
     assert "Example 1:" not in prompt
 
 
+def test_build_sql_prompt_adds_quoting_rule_when_schema_has_quoted_column():
+    prompt = build_sql_prompt(
+        question="Tampilkan rata-rata setiap kolom numerik.",
+        schema='Table: renewable\n"Hydroelectric Power": DOUBLE\nYear: BIGINT',
+        dataset_profile_context="table_name: renewable",
+    )
+
+    assert 'AVG("Hydroelectric Power")' in prompt
+
+
+def test_build_sql_prompt_omits_quoting_rule_for_clean_schema():
+    prompt = build_sql_prompt(
+        question="Berapa rata-rata daya aktif?",
+        schema="Table: electric_power\nGlobal_active_power: DOUBLE\ndatetime: TIMESTAMP",
+    )
+
+    assert "contain spaces or special characters" not in prompt
+
+
 def test_build_sql_prompt_rejects_empty_inputs():
     with pytest.raises(ValueError, match="question must not be empty"):
         build_sql_prompt(question="", schema="sales(amount DOUBLE)")

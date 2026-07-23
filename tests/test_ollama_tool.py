@@ -149,6 +149,43 @@ def test_from_config_reads_model_yaml_and_env_values(monkeypatch):
     assert tool.keep_alive == "1h"
 
 
+def test_from_config_reads_named_section(monkeypatch):
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    monkeypatch.setenv("OLLAMA_INSIGHT_MODEL", "gemma2-energy-insight:v3")
+    monkeypatch.setattr(
+        ollama_tool,
+        "load_config",
+        lambda path: {
+            "model": {"provider": "ollama", "base_url": "${OLLAMA_BASE_URL}", "name": "base"},
+            "insight_model": {
+                "provider": "ollama",
+                "base_url": "${OLLAMA_BASE_URL}",
+                "name": "${OLLAMA_INSIGHT_MODEL}",
+            },
+        },
+    )
+
+    tool = OllamaTool.from_config(section="insight_model")
+
+    assert tool.model == "gemma2-energy-insight:v3"
+
+
+def test_from_config_falls_back_to_model_section_when_named_section_missing(monkeypatch):
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    monkeypatch.setenv("OLLAMA_MODEL", "gemma2:2b")
+    monkeypatch.setattr(
+        ollama_tool,
+        "load_config",
+        lambda path: {
+            "model": {"provider": "ollama", "base_url": "${OLLAMA_BASE_URL}", "name": "${OLLAMA_MODEL}"},
+        },
+    )
+
+    tool = OllamaTool.from_config(section="insight_model")
+
+    assert tool.model == "gemma2:2b"
+
+
 def test_ollama_tool_validates_keep_alive_duration():
     assert (
         OllamaTool(

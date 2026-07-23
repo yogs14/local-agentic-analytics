@@ -13,6 +13,7 @@ import pandas as pd
 
 from local_agentic_analytics.core.config import PROJECT_ROOT, load_config
 from local_agentic_analytics.core.state import AnalyticsState
+from local_agentic_analytics.evaluation.result_comparison import compare_result_sets
 from local_agentic_analytics.graph.workflow import SequentialAnalyticsWorkflow
 from local_agentic_analytics.tools.duckdb_tool import DuckDBTool
 
@@ -23,6 +24,9 @@ DEFAULT_GOLD_QUESTIONS_PATH = (
 DEFAULT_OUTPUT_PATH = PROJECT_ROOT / "reports" / "experiments" / "sql_gold_eval.csv"
 NUMERIC_TOLERANCE = 1e-6
 
+# "numeric_match" is the legacy scalar-only metric (numeric_match_legacy);
+# "result_match_full" is the row-set comparison added in Fase 2. Both are
+# reported side by side; the legacy metric is never altered.
 SQL_GOLD_EVAL_COLUMNS = (
     "question_id",
     "question",
@@ -36,6 +40,8 @@ SQL_GOLD_EVAL_COLUMNS = (
     "agent_result",
     "gold_result",
     "error_message",
+    "result_match_full",
+    "result_match_reason",
 )
 
 
@@ -144,6 +150,10 @@ def run_single_gold_question(
         agent_result.numeric_value,
         gold_result.numeric_value,
     )
+    result_comparison = compare_result_sets(
+        agent_result.result_text,
+        gold_result.result_text,
+    )
 
     return {
         "question_id": question_id,
@@ -158,6 +168,8 @@ def run_single_gold_question(
         "agent_result": agent_result.result_text,
         "gold_result": gold_result.result_text,
         "error_message": " | ".join(errors),
+        "result_match_full": result_comparison["result_match_full"],
+        "result_match_reason": result_comparison["result_match_reason"],
     }
 
 
@@ -175,6 +187,8 @@ def _failed_row(question: dict[str, Any], error_message: str) -> dict[str, Any]:
         "agent_result": "",
         "gold_result": "",
         "error_message": error_message,
+        "result_match_full": "",
+        "result_match_reason": "not_evaluated",
     }
 
 
@@ -257,6 +271,10 @@ def summarize_sql_gold_results(rows: list[dict[str, Any]]) -> dict[str, float | 
     gold_success_count = sum(1 for row in rows if bool(row.get("gold_success")))
     numeric_rows = [row for row in rows if row.get("numeric_match") != ""]
     numeric_match_count = sum(1 for row in numeric_rows if bool(row.get("numeric_match")))
+    result_full_rows = [row for row in rows if row.get("result_match_full") != ""]
+    result_full_match_count = sum(
+        1 for row in result_full_rows if bool(row.get("result_match_full"))
+    )
 
     return {
         "total_questions": total_questions,
@@ -266,6 +284,11 @@ def summarize_sql_gold_results(rows: list[dict[str, Any]]) -> dict[str, float | 
         "numeric_match_count": numeric_match_count,
         "numeric_match_rate": (
             numeric_match_count / len(numeric_rows) if numeric_rows else 0.0
+        ),
+        "result_full_compared_count": len(result_full_rows),
+        "result_full_match_count": result_full_match_count,
+        "result_match_full_rate": (
+            result_full_match_count / total_questions if total_questions else 0.0
         ),
     }
 

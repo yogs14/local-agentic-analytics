@@ -3,9 +3,14 @@ chromadb:
   collection_name: local_agentic_analytics
   anonymized_telemetry: false
 
+# Switched from all-MiniLM-L6-v2 (2026-07-13) based on the embedding ablation
+# on the human-verified retrieval gold set: multilingual wins on every metric
+# (MRR 0.65->0.69, Recall@5 63.8%->71.5%) and specifically fixes abstract
+# Indonesian queries over English headlines. See
+# reports/experiments/rag_embedding_ablation.csv.
 embedding:
   provider: sentence-transformers
-  model: sentence-transformers/all-MiniLM-L6-v2
+  model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
   batch_size: 8
 
 retrieval:

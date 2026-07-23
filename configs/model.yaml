@@ -8,6 +8,19 @@ model:
   timeout_seconds: 120
   keep_alive: 30m
 
+# Fine-tuned narrator for the energy report's InsightAgent. Trained on flat
+# "key: value" stat blocks with a baked-in system prompt; only the energy
+# InsightAgent uses it, while SQL/planner/reporter stay on the base model above.
+insight_model:
+  provider: ollama
+  base_url: ${OLLAMA_BASE_URL}
+  name: ${OLLAMA_INSIGHT_MODEL}
+  temperature: 0.4
+  context_window: 2048
+  num_gpu: 999
+  timeout_seconds: 120
+  keep_alive: 30m
+
 generation:
   max_retries: 2
   stream: false

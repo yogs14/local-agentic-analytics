@@ -20,6 +20,7 @@ from local_agentic_analytics.evaluation.sql_gold_eval import (
     summarize_sql_gold_results,
     write_sql_gold_results,
 )
+from local_agentic_analytics.graph.workflow import SequentialAnalyticsWorkflow
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,6 +45,15 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Optional maximum number of questions to run.",
     )
+    parser.add_argument(
+        "--domain",
+        default="energy",
+        help=(
+            "Workflow domain for the questions (default: energy). Use "
+            "'finance' for the finance gold set or questions mis-route to "
+            "the energy table."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -52,9 +62,21 @@ def print_summary(summary: dict[str, float | int], output_path: Path) -> None:
     print(f"- total_questions: {summary['total_questions']}")
     print(f"- agent_success_count: {summary['agent_success_count']}")
     print(f"- gold_success_count: {summary['gold_success_count']}")
-    print(f"- numeric_compared_count: {summary['numeric_compared_count']}")
-    print(f"- numeric_match_count: {summary['numeric_match_count']}")
-    print(f"- numeric_match_rate: {summary['numeric_match_rate']:.2%}")
+    print(f"- numeric_compared_count (legacy): {summary['numeric_compared_count']}")
+    print(f"- numeric_match_count (legacy): {summary['numeric_match_count']}")
+    print(f"- numeric_match_rate (legacy): {summary['numeric_match_rate']:.2%}")
+    print(
+        "- result_full_compared_count: "
+        f"{summary.get('result_full_compared_count', 0)}"
+    )
+    print(
+        "- result_full_match_count: "
+        f"{summary.get('result_full_match_count', 0)}"
+    )
+    print(
+        "- result_match_full_rate (of all questions): "
+        f"{summary.get('result_match_full_rate', 0.0):.2%}"
+    )
     print(f"- output_path: {output_path}")
 
 
@@ -74,7 +96,8 @@ def main() -> int:
     if args.limit is not None:
         questions = questions[: args.limit]
 
-    rows = run_sql_gold_evaluation(questions)
+    workflow = SequentialAnalyticsWorkflow(domain=args.domain)
+    rows = run_sql_gold_evaluation(questions, workflow=workflow)
     write_sql_gold_results(rows, args.output_path)
     print_summary(summarize_sql_gold_results(rows), args.output_path)
 

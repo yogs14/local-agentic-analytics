@@ -1,0 +1,1764 @@
+[
+  {
+    "id": "E101",
+    "question": "Berapa rata-rata daya aktif pada tanggal 15 Januari 2007?",
+    "gold_sql_file": "references/sql_gold/E101.sql",
+    "expected_unit": "kW",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "resolver_eligible": "yes",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E102",
+    "question": "Berapa total energi kWh pada tanggal 29 Februari 2008 berdasarkan Global_active_power?",
+    "gold_sql_file": "references/sql_gold/E102.sql",
+    "expected_unit": "kWh",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "resolver_eligible": "yes",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E103",
+    "question": "Berapa tegangan rata-rata pada tanggal 4 Juli 2009?",
+    "gold_sql_file": "references/sql_gold/E103.sql",
+    "expected_unit": "V",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E104",
+    "question": "Berapa rata-rata intensitas arus pada tanggal 21 Maret 2010?",
+    "gold_sql_file": "references/sql_gold/E104.sql",
+    "expected_unit": "A",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E105",
+    "question": "Berapa daya aktif maksimum pada tanggal 15 Juni 2007?",
+    "gold_sql_file": "references/sql_gold/E105.sql",
+    "expected_unit": "kW",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E106",
+    "question": "Berapa rata-rata Global_active_power pada rentang jam 18 sampai 20 di tanggal 20 Januari 2007?",
+    "gold_sql_file": "references/sql_gold/E106.sql",
+    "expected_unit": "kW",
+    "category": "hour_filter",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "medium",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E107",
+    "question": "Berapa konsumsi listrik dalam kWh pada jam 19 (pukul 19:00-19:59) tanggal 20 Januari 2007 berdasarkan Global_active_power?",
+    "gold_sql_file": "references/sql_gold/E107.sql",
+    "expected_unit": "kWh",
+    "category": "hour_filter",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "medium",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E108",
+    "question": "Pada jam berapa rata-rata Global_active_power tertinggi pada tanggal 1 Februari 2007?",
+    "gold_sql_file": "references/sql_gold/E108.sql",
+    "expected_unit": "hour",
+    "category": "groupby_limit",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "row",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E109",
+    "question": "Tampilkan rata-rata Global_active_power per jam pada tanggal 1 Februari 2007.",
+    "gold_sql_file": "references/sql_gold/E109.sql",
+    "expected_unit": "kW",
+    "category": "hour_filter",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "table",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E110",
+    "question": "Berapa rata-rata daya aktif sepanjang bulan Januari 2007?",
+    "gold_sql_file": "references/sql_gold/E110.sql",
+    "expected_unit": "kW",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E111",
+    "question": "Berapa total energi kWh sepanjang bulan Agustus 2008?",
+    "gold_sql_file": "references/sql_gold/E111.sql",
+    "expected_unit": "kWh",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E112",
+    "question": "Tampilkan tegangan rata-rata per bulan sepanjang tahun 2007.",
+    "gold_sql_file": "references/sql_gold/E112.sql",
+    "expected_unit": "V",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "table",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E113",
+    "question": "Tampilkan total energi kWh per bulan pada tahun 2009 diurutkan dari yang terbesar.",
+    "gold_sql_file": "references/sql_gold/E113.sql",
+    "expected_unit": "kWh",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "table",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E114",
+    "question": "Tampilkan rata-rata daya aktif untuk setiap hari dalam seminggu sepanjang tahun 2008.",
+    "gold_sql_file": "references/sql_gold/E114.sql",
+    "expected_unit": "kW",
+    "category": "weekly_aggregation",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E115",
+    "question": "Tampilkan total energi kWh per minggu ISO pada bulan Januari 2007.",
+    "gold_sql_file": "references/sql_gold/E115.sql",
+    "expected_unit": "kWh",
+    "category": "weekly_aggregation",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E116",
+    "question": "Berapa jumlah record dengan Global_active_power di atas 5 kW dan Voltage di bawah 235 V?",
+    "gold_sql_file": "references/sql_gold/E116.sql",
+    "expected_unit": "records",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "medium",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E117",
+    "question": "Berapa tegangan rata-rata ketika intensitas arus di atas 10 A pada tanggal 16 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E117.sql",
+    "expected_unit": "V",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "medium",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E118",
+    "question": "Berapa jumlah record dengan Sub_metering_3 lebih dari 0 sepanjang bulan Desember 2007?",
+    "gold_sql_file": "references/sql_gold/E118.sql",
+    "expected_unit": "records",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "medium",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E119",
+    "question": "Tampilkan 5 tanggal dengan total energi kWh tertinggi sepanjang tahun 2007.",
+    "gold_sql_file": "references/sql_gold/E119.sql",
+    "expected_unit": "kWh",
+    "category": "groupby_limit",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E120",
+    "question": "Tampilkan 3 jam dengan rata-rata daya aktif tertinggi sepanjang tahun 2008.",
+    "gold_sql_file": "references/sql_gold/E120.sql",
+    "expected_unit": "kW",
+    "category": "groupby_limit",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E121",
+    "question": "Kapan daya aktif tertinggi sepanjang seluruh dataset terjadi?",
+    "gold_sql_file": "references/sql_gold/E121.sql",
+    "expected_unit": "timestamp",
+    "category": "extremes",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "row",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E122",
+    "question": "Bandingkan rata-rata daya aktif bulan Januari pada tahun 2007, 2008, 2009, dan 2010.",
+    "gold_sql_file": "references/sql_gold/E122.sql",
+    "expected_unit": "kW",
+    "category": "period_comparison",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E123",
+    "question": "Tampilkan total energi kWh untuk setiap tahun 2007, 2008, dan 2009.",
+    "gold_sql_file": "references/sql_gold/E123.sql",
+    "expected_unit": "kWh",
+    "category": "period_comparison",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E124",
+    "question": "Bandingkan tegangan rata-rata pada bulan Juni, Juli, dan Agustus 2007.",
+    "gold_sql_file": "references/sql_gold/E124.sql",
+    "expected_unit": "V",
+    "category": "period_comparison",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "table",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E125",
+    "question": "Berapa rata-rata masing-masing Sub_metering_1, Sub_metering_2, dan Sub_metering_3 sepanjang seluruh dataset?",
+    "gold_sql_file": "references/sql_gold/E125.sql",
+    "expected_unit": "Wh",
+    "category": "aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "row",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E126",
+    "question": "Berapa total konsumsi Sub_metering_3 dalam Wh pada tanggal 25 Desember 2009?",
+    "gold_sql_file": "references/sql_gold/E126.sql",
+    "expected_unit": "Wh",
+    "category": "daily_aggregation",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E127",
+    "question": "Berapa standar deviasi daya aktif pada tanggal 14 Juli 2010?",
+    "gold_sql_file": "references/sql_gold/E127.sql",
+    "expected_unit": "kW",
+    "category": "statistics",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E128",
+    "question": "Berapa median tegangan pada tanggal 14 Juli 2010?",
+    "gold_sql_file": "references/sql_gold/E128.sql",
+    "expected_unit": "V",
+    "category": "statistics",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E129",
+    "question": "Berapa jumlah hari unik yang tercatat dalam dataset?",
+    "gold_sql_file": "references/sql_gold/E129.sql",
+    "expected_unit": "count",
+    "category": "statistics",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E130",
+    "question": "Kapan tegangan terendah sepanjang seluruh dataset terjadi?",
+    "gold_sql_file": "references/sql_gold/E130.sql",
+    "expected_unit": "timestamp",
+    "category": "extremes",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "row",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E131",
+    "question": "Kapan intensitas arus tertinggi pada bulan November 2010 terjadi?",
+    "gold_sql_file": "references/sql_gold/E131.sql",
+    "expected_unit": "timestamp",
+    "category": "extremes",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "row",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E132",
+    "question": "Berapa jumlah missing value pada kolom Voltage?",
+    "gold_sql_file": "references/sql_gold/E132.sql",
+    "expected_unit": "count",
+    "category": "missing_value",
+    "difficulty": "easy",
+    "resolver_eligible": "yes",
+    "result_shape": "scalar",
+    "hardness": "easy",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E133",
+    "question": "Berapa jumlah nilai hilang secara keseluruhan dalam dataset?",
+    "gold_sql_file": "references/sql_gold/E133.sql",
+    "expected_unit": "count",
+    "category": "missing_value",
+    "difficulty": "medium",
+    "resolver_eligible": "yes",
+    "result_shape": "row",
+    "hardness": "hard",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E134",
+    "question": "Berapa persentase menit dengan daya aktif di atas 4 kW sepanjang bulan Januari 2007?",
+    "gold_sql_file": "references/sql_gold/E134.sql",
+    "expected_unit": "percent",
+    "category": "threshold",
+    "difficulty": "hard",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "medium",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E135",
+    "question": "Berapa jumlah record dengan Sub_metering_1 lebih dari 0 pada tanggal 15 Januari 2007?",
+    "gold_sql_file": "references/sql_gold/E135.sql",
+    "expected_unit": "records",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "medium",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E136",
+    "question": "Berapa selisih antara tegangan maksimum dan minimum pada tanggal 4 Juli 2009?",
+    "gold_sql_file": "references/sql_gold/E136.sql",
+    "expected_unit": "V",
+    "category": "statistics",
+    "difficulty": "medium",
+    "resolver_eligible": "no",
+    "result_shape": "scalar",
+    "hardness": "medium",
+    "verified": true,
+    "source": "v2"
+  },
+  {
+    "id": "E201",
+    "question": "Berapa rata-rata daya aktif pada tanggal 18 Juni 2008?",
+    "gold_sql_file": "references/sql_gold/E201.sql",
+    "expected_unit": "kW",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "AVG",
+      "column": "Global_active_power",
+      "date": "2008-06-18"
+    }
+  },
+  {
+    "id": "E202",
+    "question": "Berapa rata-rata tegangan pada tanggal 5 Desember 2009?",
+    "gold_sql_file": "references/sql_gold/E202.sql",
+    "expected_unit": "V",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "AVG",
+      "column": "Voltage",
+      "date": "2009-12-05"
+    }
+  },
+  {
+    "id": "E203",
+    "question": "Berapa rata-rata intensitas arus pada tanggal 7 November 2009?",
+    "gold_sql_file": "references/sql_gold/E203.sql",
+    "expected_unit": "A",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "AVG",
+      "column": "Global_intensity",
+      "date": "2009-11-07"
+    }
+  },
+  {
+    "id": "E204",
+    "question": "Berapa rata-rata daya reaktif pada tanggal 23 April 2009?",
+    "gold_sql_file": "references/sql_gold/E204.sql",
+    "expected_unit": "kW",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "AVG",
+      "column": "Global_reactive_power",
+      "date": "2009-04-23"
+    }
+  },
+  {
+    "id": "E205",
+    "question": "Berapa maksimum daya aktif pada tanggal 6 Januari 2010?",
+    "gold_sql_file": "references/sql_gold/E205.sql",
+    "expected_unit": "kW",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "MAX",
+      "column": "Global_active_power",
+      "date": "2010-01-06"
+    }
+  },
+  {
+    "id": "E206",
+    "question": "Berapa maksimum tegangan pada tanggal 18 November 2009?",
+    "gold_sql_file": "references/sql_gold/E206.sql",
+    "expected_unit": "V",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "MAX",
+      "column": "Voltage",
+      "date": "2009-11-18"
+    }
+  },
+  {
+    "id": "E207",
+    "question": "Berapa maksimum intensitas arus pada tanggal 12 Juli 2010?",
+    "gold_sql_file": "references/sql_gold/E207.sql",
+    "expected_unit": "A",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "MAX",
+      "column": "Global_intensity",
+      "date": "2010-07-12"
+    }
+  },
+  {
+    "id": "E208",
+    "question": "Berapa maksimum daya reaktif pada tanggal 17 Maret 2010?",
+    "gold_sql_file": "references/sql_gold/E208.sql",
+    "expected_unit": "kW",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "MAX",
+      "column": "Global_reactive_power",
+      "date": "2010-03-17"
+    }
+  },
+  {
+    "id": "E209",
+    "question": "Berapa minimum daya aktif pada tanggal 29 Februari 2008?",
+    "gold_sql_file": "references/sql_gold/E209.sql",
+    "expected_unit": "kW",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "MIN",
+      "column": "Global_active_power",
+      "date": "2008-02-29"
+    }
+  },
+  {
+    "id": "E210",
+    "question": "Berapa minimum tegangan pada tanggal 24 September 2009?",
+    "gold_sql_file": "references/sql_gold/E210.sql",
+    "expected_unit": "V",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "MIN",
+      "column": "Voltage",
+      "date": "2009-09-24"
+    }
+  },
+  {
+    "id": "E211",
+    "question": "Berapa minimum intensitas arus pada tanggal 26 Desember 2006?",
+    "gold_sql_file": "references/sql_gold/E211.sql",
+    "expected_unit": "A",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "MIN",
+      "column": "Global_intensity",
+      "date": "2006-12-26"
+    }
+  },
+  {
+    "id": "E212",
+    "question": "Berapa minimum daya reaktif pada tanggal 7 September 2010?",
+    "gold_sql_file": "references/sql_gold/E212.sql",
+    "expected_unit": "kW",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_agg",
+    "params": {
+      "agg": "MIN",
+      "column": "Global_reactive_power",
+      "date": "2010-09-07"
+    }
+  },
+  {
+    "id": "E213",
+    "question": "Berapa total energi kWh pada tanggal 12 Januari 2008 berdasarkan Global_active_power?",
+    "gold_sql_file": "references/sql_gold/E213.sql",
+    "expected_unit": "kWh",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_energy",
+    "params": {
+      "date": "2008-01-12"
+    }
+  },
+  {
+    "id": "E214",
+    "question": "Berapa total energi kWh pada tanggal 13 September 2010 berdasarkan Global_active_power?",
+    "gold_sql_file": "references/sql_gold/E214.sql",
+    "expected_unit": "kWh",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_energy",
+    "params": {
+      "date": "2010-09-13"
+    }
+  },
+  {
+    "id": "E215",
+    "question": "Berapa total energi kWh pada tanggal 9 April 2010 berdasarkan Global_active_power?",
+    "gold_sql_file": "references/sql_gold/E215.sql",
+    "expected_unit": "kWh",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_energy",
+    "params": {
+      "date": "2010-04-09"
+    }
+  },
+  {
+    "id": "E216",
+    "question": "Berapa total konsumsi Sub_metering_1 dalam Wh pada tanggal 9 April 2009?",
+    "gold_sql_file": "references/sql_gold/E216.sql",
+    "expected_unit": "Wh",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_sub_sum",
+    "params": {
+      "column": "Sub_metering_1",
+      "date": "2009-04-09"
+    }
+  },
+  {
+    "id": "E217",
+    "question": "Berapa total konsumsi Sub_metering_2 dalam Wh pada tanggal 4 Januari 2010?",
+    "gold_sql_file": "references/sql_gold/E217.sql",
+    "expected_unit": "Wh",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_sub_sum",
+    "params": {
+      "column": "Sub_metering_2",
+      "date": "2010-01-04"
+    }
+  },
+  {
+    "id": "E218",
+    "question": "Berapa total konsumsi Sub_metering_3 dalam Wh pada tanggal 31 Desember 2007?",
+    "gold_sql_file": "references/sql_gold/E218.sql",
+    "expected_unit": "Wh",
+    "category": "daily_aggregation",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_sub_sum",
+    "params": {
+      "column": "Sub_metering_3",
+      "date": "2007-12-31"
+    }
+  },
+  {
+    "id": "E219",
+    "question": "Berapa selisih antara tegangan maksimum dan minimum pada tanggal 11 Agustus 2007?",
+    "gold_sql_file": "references/sql_gold/E219.sql",
+    "expected_unit": "V",
+    "category": "statistics",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_range",
+    "params": {
+      "column": "Voltage",
+      "date": "2007-08-11"
+    }
+  },
+  {
+    "id": "E220",
+    "question": "Berapa selisih antara daya aktif maksimum dan minimum pada tanggal 15 September 2010?",
+    "gold_sql_file": "references/sql_gold/E220.sql",
+    "expected_unit": "kW",
+    "category": "statistics",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_range",
+    "params": {
+      "column": "Global_active_power",
+      "date": "2010-09-15"
+    }
+  },
+  {
+    "id": "E221",
+    "question": "Berapa standar deviasi daya aktif pada tanggal 3 Januari 2007?",
+    "gold_sql_file": "references/sql_gold/E221.sql",
+    "expected_unit": "kW",
+    "category": "statistics",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_stat",
+    "params": {
+      "func": "STDDEV_SAMP",
+      "column": "Global_active_power",
+      "date": "2007-01-03"
+    }
+  },
+  {
+    "id": "E222",
+    "question": "Berapa median tegangan pada tanggal 17 Januari 2009?",
+    "gold_sql_file": "references/sql_gold/E222.sql",
+    "expected_unit": "V",
+    "category": "statistics",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_stat",
+    "params": {
+      "func": "MEDIAN",
+      "column": "Voltage",
+      "date": "2009-01-17"
+    }
+  },
+  {
+    "id": "E223",
+    "question": "Berapa standar deviasi daya aktif pada tanggal 22 Maret 2007?",
+    "gold_sql_file": "references/sql_gold/E223.sql",
+    "expected_unit": "kW",
+    "category": "statistics",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_daily_stat",
+    "params": {
+      "func": "STDDEV_SAMP",
+      "column": "Global_active_power",
+      "date": "2007-03-22"
+    }
+  },
+  {
+    "id": "E224",
+    "question": "Berapa rata-rata daya aktif sepanjang bulan April 2010?",
+    "gold_sql_file": "references/sql_gold/E224.sql",
+    "expected_unit": "kW",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_monthly_agg",
+    "params": {
+      "agg": "AVG",
+      "column": "Global_active_power",
+      "year": 2010,
+      "month": 4
+    }
+  },
+  {
+    "id": "E225",
+    "question": "Berapa rata-rata tegangan sepanjang bulan Agustus 2008?",
+    "gold_sql_file": "references/sql_gold/E225.sql",
+    "expected_unit": "V",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_monthly_agg",
+    "params": {
+      "agg": "AVG",
+      "column": "Voltage",
+      "year": 2008,
+      "month": 8
+    }
+  },
+  {
+    "id": "E226",
+    "question": "Berapa rata-rata intensitas arus sepanjang bulan Mei 2007?",
+    "gold_sql_file": "references/sql_gold/E226.sql",
+    "expected_unit": "A",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_monthly_agg",
+    "params": {
+      "agg": "AVG",
+      "column": "Global_intensity",
+      "year": 2007,
+      "month": 5
+    }
+  },
+  {
+    "id": "E227",
+    "question": "Berapa maksimum daya aktif sepanjang bulan Juli 2007?",
+    "gold_sql_file": "references/sql_gold/E227.sql",
+    "expected_unit": "kW",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_monthly_agg",
+    "params": {
+      "agg": "MAX",
+      "column": "Global_active_power",
+      "year": 2007,
+      "month": 7
+    }
+  },
+  {
+    "id": "E228",
+    "question": "Berapa maksimum tegangan sepanjang bulan April 2009?",
+    "gold_sql_file": "references/sql_gold/E228.sql",
+    "expected_unit": "V",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_monthly_agg",
+    "params": {
+      "agg": "MAX",
+      "column": "Voltage",
+      "year": 2009,
+      "month": 4
+    }
+  },
+  {
+    "id": "E229",
+    "question": "Berapa maksimum intensitas arus sepanjang bulan Juni 2008?",
+    "gold_sql_file": "references/sql_gold/E229.sql",
+    "expected_unit": "A",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_monthly_agg",
+    "params": {
+      "agg": "MAX",
+      "column": "Global_intensity",
+      "year": 2008,
+      "month": 6
+    }
+  },
+  {
+    "id": "E230",
+    "question": "Berapa total energi kWh sepanjang bulan Oktober 2009?",
+    "gold_sql_file": "references/sql_gold/E230.sql",
+    "expected_unit": "kWh",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_monthly_energy",
+    "params": {
+      "year": 2009,
+      "month": 10
+    }
+  },
+  {
+    "id": "E231",
+    "question": "Berapa total energi kWh sepanjang bulan Juli 2010?",
+    "gold_sql_file": "references/sql_gold/E231.sql",
+    "expected_unit": "kWh",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_monthly_energy",
+    "params": {
+      "year": 2010,
+      "month": 7
+    }
+  },
+  {
+    "id": "E232",
+    "question": "Berapa total energi kWh sepanjang bulan Januari 2008?",
+    "gold_sql_file": "references/sql_gold/E232.sql",
+    "expected_unit": "kWh",
+    "category": "monthly_aggregation",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_monthly_energy",
+    "params": {
+      "year": 2008,
+      "month": 1
+    }
+  },
+  {
+    "id": "E233",
+    "question": "Berapa rata-rata daya aktif pada rentang jam 10 sampai 12 di tanggal 11 September 2008?",
+    "gold_sql_file": "references/sql_gold/E233.sql",
+    "expected_unit": "kW",
+    "category": "hour_filter",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_hour_filter",
+    "params": {
+      "column": "Global_active_power",
+      "date": "2008-09-11",
+      "h1": 10,
+      "h2": 12
+    }
+  },
+  {
+    "id": "E234",
+    "question": "Berapa rata-rata tegangan pada rentang jam 8 sampai 11 di tanggal 16 Juni 2009?",
+    "gold_sql_file": "references/sql_gold/E234.sql",
+    "expected_unit": "V",
+    "category": "hour_filter",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_hour_filter",
+    "params": {
+      "column": "Voltage",
+      "date": "2009-06-16",
+      "h1": 8,
+      "h2": 11
+    }
+  },
+  {
+    "id": "E235",
+    "question": "Berapa rata-rata intensitas arus pada rentang jam 8 sampai 10 di tanggal 14 September 2010?",
+    "gold_sql_file": "references/sql_gold/E235.sql",
+    "expected_unit": "A",
+    "category": "hour_filter",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_hour_filter",
+    "params": {
+      "column": "Global_intensity",
+      "date": "2010-09-14",
+      "h1": 8,
+      "h2": 10
+    }
+  },
+  {
+    "id": "E236",
+    "question": "Berapa rata-rata daya aktif pada rentang jam 6 sampai 8 di tanggal 19 Januari 2008?",
+    "gold_sql_file": "references/sql_gold/E236.sql",
+    "expected_unit": "kW",
+    "category": "hour_filter",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_hour_filter",
+    "params": {
+      "column": "Global_active_power",
+      "date": "2008-01-19",
+      "h1": 6,
+      "h2": 8
+    }
+  },
+  {
+    "id": "E237",
+    "question": "Berapa jumlah record dengan daya aktif di atas 2.5 kW pada tanggal 7 Februari 2007?",
+    "gold_sql_file": "references/sql_gold/E237.sql",
+    "expected_unit": "records",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_count_threshold",
+    "params": {
+      "date": "2007-02-07",
+      "column": "Global_active_power",
+      "threshold": 2.5
+    }
+  },
+  {
+    "id": "E238",
+    "question": "Berapa jumlah record dengan intensitas arus di atas 10 A pada tanggal 28 Mei 2007?",
+    "gold_sql_file": "references/sql_gold/E238.sql",
+    "expected_unit": "records",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_count_threshold",
+    "params": {
+      "date": "2007-05-28",
+      "column": "Global_intensity",
+      "threshold": 10.0
+    }
+  },
+  {
+    "id": "E239",
+    "question": "Berapa jumlah record dengan daya aktif di atas 2.5 kW sepanjang bulan Mei 2010?",
+    "gold_sql_file": "references/sql_gold/E239.sql",
+    "expected_unit": "records",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_count_threshold",
+    "params": {
+      "year": 2010,
+      "month": 5,
+      "column": "Global_active_power",
+      "threshold": 2.5
+    }
+  },
+  {
+    "id": "E240",
+    "question": "Berapa jumlah record dengan tegangan di atas 241 V sepanjang bulan Juli 2008?",
+    "gold_sql_file": "references/sql_gold/E240.sql",
+    "expected_unit": "records",
+    "category": "multi_condition",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_count_threshold",
+    "params": {
+      "year": 2008,
+      "month": 7,
+      "column": "Voltage",
+      "threshold": 241.0
+    }
+  },
+  {
+    "id": "E241",
+    "question": "Berapa persentase menit dengan daya aktif di atas 0.6 kW sepanjang bulan Mei 2009?",
+    "gold_sql_file": "references/sql_gold/E241.sql",
+    "expected_unit": "percent",
+    "category": "threshold",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_percent_threshold",
+    "params": {
+      "year": 2009,
+      "month": 5,
+      "threshold": 0.6
+    }
+  },
+  {
+    "id": "E242",
+    "question": "Berapa persentase menit dengan daya aktif di atas 0.6 kW sepanjang bulan November 2007?",
+    "gold_sql_file": "references/sql_gold/E242.sql",
+    "expected_unit": "percent",
+    "category": "threshold",
+    "difficulty": "medium",
+    "hardness": "medium",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_percent_threshold",
+    "params": {
+      "year": 2007,
+      "month": 11,
+      "threshold": 0.6
+    }
+  },
+  {
+    "id": "E243",
+    "question": "Tampilkan rata-rata daya aktif per hari sepanjang bulan Agustus 2009.",
+    "gold_sql_file": "references/sql_gold/E243.sql",
+    "expected_unit": "kW",
+    "category": "daily_aggregation",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_per_day_in_month",
+    "params": {
+      "column": "Global_active_power",
+      "year": 2009,
+      "month": 8
+    }
+  },
+  {
+    "id": "E244",
+    "question": "Tampilkan rata-rata tegangan per hari sepanjang bulan Maret 2009.",
+    "gold_sql_file": "references/sql_gold/E244.sql",
+    "expected_unit": "V",
+    "category": "daily_aggregation",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_per_day_in_month",
+    "params": {
+      "column": "Voltage",
+      "year": 2009,
+      "month": 3
+    }
+  },
+  {
+    "id": "E245",
+    "question": "Tampilkan rata-rata intensitas arus per hari sepanjang bulan September 2007.",
+    "gold_sql_file": "references/sql_gold/E245.sql",
+    "expected_unit": "A",
+    "category": "daily_aggregation",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_per_day_in_month",
+    "params": {
+      "column": "Global_intensity",
+      "year": 2007,
+      "month": 9
+    }
+  },
+  {
+    "id": "E246",
+    "question": "Tampilkan 5 tanggal dengan total energi kWh tertinggi sepanjang tahun 2007.",
+    "gold_sql_file": "references/sql_gold/E246.sql",
+    "expected_unit": "kWh",
+    "category": "groupby_limit",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_top_n_days",
+    "params": {
+      "year": 2007,
+      "n": 5
+    }
+  },
+  {
+    "id": "E247",
+    "question": "Tampilkan 3 tanggal dengan total energi kWh tertinggi sepanjang tahun 2008.",
+    "gold_sql_file": "references/sql_gold/E247.sql",
+    "expected_unit": "kWh",
+    "category": "groupby_limit",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_top_n_days",
+    "params": {
+      "year": 2008,
+      "n": 3
+    }
+  },
+  {
+    "id": "E248",
+    "question": "Tampilkan 3 jam dengan rata-rata daya aktif tertinggi sepanjang bulan Desember 2007.",
+    "gold_sql_file": "references/sql_gold/E248.sql",
+    "expected_unit": "kW",
+    "category": "groupby_limit",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_top_n_hours",
+    "params": {
+      "year": 2007,
+      "month": 12,
+      "n": 3
+    }
+  },
+  {
+    "id": "E249",
+    "question": "Tampilkan 5 jam dengan rata-rata daya aktif tertinggi sepanjang bulan September 2009.",
+    "gold_sql_file": "references/sql_gold/E249.sql",
+    "expected_unit": "kW",
+    "category": "groupby_limit",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_top_n_hours",
+    "params": {
+      "year": 2009,
+      "month": 9,
+      "n": 5
+    }
+  },
+  {
+    "id": "E250",
+    "question": "Tampilkan bulan-bulan pada tahun 2007 yang rata-rata daya aktif-nya di atas 1 kW.",
+    "gold_sql_file": "references/sql_gold/E250.sql",
+    "expected_unit": "kW",
+    "category": "groupby_having",
+    "difficulty": "extra",
+    "hardness": "extra",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_having_months",
+    "params": {
+      "column": "Global_active_power",
+      "year": 2007,
+      "threshold": 1.0
+    }
+  },
+  {
+    "id": "E251",
+    "question": "Tampilkan bulan-bulan pada tahun 2009 yang rata-rata intensitas arus-nya di atas 4 A.",
+    "gold_sql_file": "references/sql_gold/E251.sql",
+    "expected_unit": "A",
+    "category": "groupby_having",
+    "difficulty": "extra",
+    "hardness": "extra",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_having_months",
+    "params": {
+      "column": "Global_intensity",
+      "year": 2009,
+      "threshold": 4.0
+    }
+  },
+  {
+    "id": "E252",
+    "question": "Tampilkan bulan-bulan pada tahun 2008 yang rata-rata tegangan-nya di atas 241 V.",
+    "gold_sql_file": "references/sql_gold/E252.sql",
+    "expected_unit": "V",
+    "category": "groupby_having",
+    "difficulty": "extra",
+    "hardness": "extra",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_having_months",
+    "params": {
+      "column": "Voltage",
+      "year": 2008,
+      "threshold": 241.0
+    }
+  },
+  {
+    "id": "E253",
+    "question": "Bandingkan rata-rata daya aktif untuk setiap tahun 2007, 2008, 2009.",
+    "gold_sql_file": "references/sql_gold/E253.sql",
+    "expected_unit": "kW",
+    "category": "period_comparison",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_year_compare",
+    "params": {
+      "column": "Global_active_power",
+      "years": [
+        2007,
+        2008,
+        2009
+      ]
+    }
+  },
+  {
+    "id": "E254",
+    "question": "Bandingkan rata-rata tegangan untuk setiap tahun 2007, 2008, 2009.",
+    "gold_sql_file": "references/sql_gold/E254.sql",
+    "expected_unit": "V",
+    "category": "period_comparison",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_year_compare",
+    "params": {
+      "column": "Voltage",
+      "years": [
+        2007,
+        2008,
+        2009
+      ]
+    }
+  },
+  {
+    "id": "E255",
+    "question": "Bandingkan rata-rata daya aktif bulan Januari pada tahun 2007, 2008, 2009.",
+    "gold_sql_file": "references/sql_gold/E255.sql",
+    "expected_unit": "kW",
+    "category": "period_comparison",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_month_across_years",
+    "params": {
+      "column": "Global_active_power",
+      "month": 1,
+      "years": [
+        2007,
+        2008,
+        2009
+      ]
+    }
+  },
+  {
+    "id": "E256",
+    "question": "Bandingkan rata-rata tegangan bulan Januari pada tahun 2007, 2008, 2009.",
+    "gold_sql_file": "references/sql_gold/E256.sql",
+    "expected_unit": "V",
+    "category": "period_comparison",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_month_across_years",
+    "params": {
+      "column": "Voltage",
+      "month": 1,
+      "years": [
+        2007,
+        2008,
+        2009
+      ]
+    }
+  },
+  {
+    "id": "E257",
+    "question": "Berapa rata-rata masing-masing Sub_metering_1, Sub_metering_2, dan Sub_metering_3 pada tanggal 22 September 2010?",
+    "gold_sql_file": "references/sql_gold/E257.sql",
+    "expected_unit": "Wh",
+    "category": "aggregation",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "row",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_multi_col_avg",
+    "params": {
+      "date": "2010-09-22"
+    }
+  },
+  {
+    "id": "E258",
+    "question": "Berapa rata-rata masing-masing Sub_metering_1, Sub_metering_2, dan Sub_metering_3 sepanjang bulan Januari 2007?",
+    "gold_sql_file": "references/sql_gold/E258.sql",
+    "expected_unit": "Wh",
+    "category": "aggregation",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "row",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_multi_col_avg",
+    "params": {
+      "year": 2007,
+      "month": 1
+    }
+  },
+  {
+    "id": "E259",
+    "question": "Kapan daya aktif tertinggi pada bulan September 2008 terjadi?",
+    "gold_sql_file": "references/sql_gold/E259.sql",
+    "expected_unit": "timestamp",
+    "category": "extremes",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "row",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_argmax_time",
+    "params": {
+      "year": 2008,
+      "month": 9,
+      "column": "Global_active_power",
+      "direction": "MAX"
+    }
+  },
+  {
+    "id": "E260",
+    "question": "Kapan tegangan terendah pada tahun 2008 terjadi?",
+    "gold_sql_file": "references/sql_gold/E260.sql",
+    "expected_unit": "timestamp",
+    "category": "extremes",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "row",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_argmax_time",
+    "params": {
+      "year": 2008,
+      "column": "Voltage",
+      "direction": "MIN"
+    }
+  },
+  {
+    "id": "E261",
+    "question": "Kapan intensitas arus tertinggi pada bulan November 2009 terjadi?",
+    "gold_sql_file": "references/sql_gold/E261.sql",
+    "expected_unit": "timestamp",
+    "category": "extremes",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "row",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_argmax_time",
+    "params": {
+      "year": 2009,
+      "month": 11,
+      "column": "Global_intensity",
+      "direction": "MAX"
+    }
+  },
+  {
+    "id": "E262",
+    "question": "Kapan daya aktif tertinggi pada tahun 2007 terjadi?",
+    "gold_sql_file": "references/sql_gold/E262.sql",
+    "expected_unit": "timestamp",
+    "category": "extremes",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "row",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_argmax_time",
+    "params": {
+      "year": 2007,
+      "column": "Global_active_power",
+      "direction": "MAX"
+    }
+  },
+  {
+    "id": "E263",
+    "question": "Pada tanggal berapa terjadi kenaikan total energi harian (kWh) terbesar dibanding hari sebelumnya sepanjang bulan Oktober 2008?",
+    "gold_sql_file": "references/sql_gold/E263.sql",
+    "expected_unit": "kWh",
+    "category": "window_function",
+    "difficulty": "extra",
+    "hardness": "extra",
+    "result_shape": "row",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_window_delta_day",
+    "params": {
+      "year": 2008,
+      "month": 10
+    }
+  },
+  {
+    "id": "E264",
+    "question": "Pada tanggal berapa terjadi kenaikan total energi harian (kWh) terbesar dibanding hari sebelumnya sepanjang bulan Juni 2009?",
+    "gold_sql_file": "references/sql_gold/E264.sql",
+    "expected_unit": "kWh",
+    "category": "window_function",
+    "difficulty": "extra",
+    "hardness": "extra",
+    "result_shape": "row",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_window_delta_day",
+    "params": {
+      "year": 2009,
+      "month": 6
+    }
+  },
+  {
+    "id": "E265",
+    "question": "Pada tanggal berapa terjadi kenaikan total energi harian (kWh) terbesar dibanding hari sebelumnya sepanjang bulan November 2008?",
+    "gold_sql_file": "references/sql_gold/E265.sql",
+    "expected_unit": "kWh",
+    "category": "window_function",
+    "difficulty": "extra",
+    "hardness": "extra",
+    "result_shape": "row",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_window_delta_day",
+    "params": {
+      "year": 2008,
+      "month": 11
+    }
+  },
+  {
+    "id": "E266",
+    "question": "Berapa jumlah hari unik yang tercatat dalam dataset pada tahun 2007?",
+    "gold_sql_file": "references/sql_gold/E266.sql",
+    "expected_unit": "count",
+    "category": "statistics",
+    "difficulty": "easy",
+    "hardness": "easy",
+    "result_shape": "scalar",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_distinct_days",
+    "params": {
+      "year": 2007
+    }
+  },
+  {
+    "id": "E267",
+    "question": "Tampilkan rata-rata daya aktif untuk setiap hari dalam seminggu (ISO, 1=Senin) sepanjang tahun 2009.",
+    "gold_sql_file": "references/sql_gold/E267.sql",
+    "expected_unit": "kW",
+    "category": "weekly_aggregation",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_weekday_avg",
+    "params": {
+      "column": "Global_active_power",
+      "year": 2009
+    }
+  },
+  {
+    "id": "E268",
+    "question": "Tampilkan rata-rata tegangan untuk setiap hari dalam seminggu (ISO, 1=Senin) sepanjang tahun 2008.",
+    "gold_sql_file": "references/sql_gold/E268.sql",
+    "expected_unit": "V",
+    "category": "weekly_aggregation",
+    "difficulty": "hard",
+    "hardness": "hard",
+    "result_shape": "table",
+    "resolver_eligible": "no",
+    "verified": false,
+    "source": "generated_v3",
+    "template": "energy_weekday_avg",
+    "params": {
+      "column": "Voltage",
+      "year": 2008
+    }
+  }
+]

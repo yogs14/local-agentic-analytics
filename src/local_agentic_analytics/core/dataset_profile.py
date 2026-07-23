@@ -13,6 +13,18 @@ from local_agentic_analytics.core.config import PROJECT_ROOT
 
 DOMAINS_DIR = PROJECT_ROOT / "domains"
 
+# Domains that ship a hand-tuned profile and few-shot examples. Their compact
+# SQL context must stay byte-identical so their benchmarks are unaffected; every
+# other domain (arbitrary uploaded CSVs) receives extra type/schema guidance.
+_CURATED_DOMAINS = frozenset({"energy", "finance"})
+
+# Profile/DuckDB type names treated as aggregatable numbers.
+_NUMERIC_PROFILE_TYPES = frozenset({
+    "numeric", "integer", "double", "float", "real", "decimal", "bigint",
+    "int", "smallint", "tinyint", "hugeint", "ubigint", "uinteger",
+    "usmallint", "utinyint", "float4", "float8",
+})
+
 
 @dataclass(frozen=True)
 class ColumnProfile:
@@ -98,6 +110,21 @@ def profile_to_prompt_context(profile: DatasetProfile) -> str:
     return "\n".join(lines).strip()
 
 
+def _is_numeric_profile_column(column: ColumnProfile) -> bool:
+    return (
+        column.semantic_type.lower() in {"numeric", "integer"}
+        or column.type.lower() in _NUMERIC_PROFILE_TYPES
+    )
+
+
+def _is_text_profile_column(column: ColumnProfile) -> bool:
+    if _is_numeric_profile_column(column):
+        return False
+    return column.semantic_type.lower() in {"categorical", "other"} or (
+        column.type.lower() == "string"
+    )
+
+
 def profile_to_compact_sql_context(profile: DatasetProfile) -> str:
     """Convert a dataset profile into a compact SQL-only prompt context."""
     columns = ", ".join(profile.columns.keys())
@@ -116,13 +143,31 @@ def profile_to_compact_sql_context(profile: DatasetProfile) -> str:
         "COUNT(*) FILTER (WHERE <column> IS NULL)",
     )
 
-    lines = [
-        f"table_name: {profile.table_name}",
-        f"datetime_column: {profile.datetime_column}",
-        f"available_columns: {columns}",
-    ]
+    lines = [f"table_name: {profile.table_name}"]
+    if profile.datetime_column:
+        lines.append(f"datetime_column: {profile.datetime_column}")
+    lines.append(f"available_columns: {columns}")
     if units:
         lines.append(f"important_units: {units}")
+
+    # Arbitrary uploaded datasets get explicit type lists so the model never
+    # aggregates a text column (avg(VARCHAR)) and never drops SELECT/FROM.
+    is_generic_domain = profile.domain.lower() not in _CURATED_DOMAINS
+    if is_generic_domain:
+        numeric_cols = [
+            column.name
+            for column in profile.columns.values()
+            if _is_numeric_profile_column(column)
+        ]
+        text_cols = [
+            column.name
+            for column in profile.columns.values()
+            if _is_text_profile_column(column)
+        ]
+        lines.append(
+            "numeric_columns: " + (", ".join(numeric_cols) or "(none)")
+        )
+        lines.append("text_columns: " + (", ".join(text_cols) or "(none)"))
 
     lines.append("sql_rules:")
     for column in profile.columns.values():
@@ -134,8 +179,21 @@ def profile_to_compact_sql_context(profile: DatasetProfile) -> str:
         lines.append(f"- {rule_name}: {rule_value}")
     if "missing_value_count" not in profile.sql_rules:
         lines.append(f"- {missing_value_count}")
-    if "date_filter" not in profile.sql_rules:
+    if "date_filter" not in profile.sql_rules and profile.datetime_column:
         lines.append(f"- {date_filter}")
+
+    if is_generic_domain:
+        lines.append(
+            f"- Always start the query with SELECT and read FROM {profile.table_name}."
+        )
+        lines.append(
+            "- Apply numeric aggregates (AVG, SUM, MIN, MAX, STDDEV) only to "
+            "numeric_columns; never aggregate text_columns."
+        )
+        lines.append(
+            "- Use only column names from available_columns; do not invent, "
+            "rename, or guess columns."
+        )
 
     return "\n".join(lines).strip()
 

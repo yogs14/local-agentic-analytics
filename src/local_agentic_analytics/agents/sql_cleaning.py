@@ -3,9 +3,16 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 
 
 DATE_LITERAL_PATTERN = r"(\d{4}-\d{2}-\d{2})"
+# A bare DuckDB identifier: starts with a letter/underscore, then word chars.
+# Anything else (spaces, commas, leading digits) must be double-quoted.
+_SIMPLE_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+# Matches a whole double-quoted identifier or single-quoted string literal so
+# their contents can be shielded from identifier rewriting.
+_QUOTED_OR_STRING_PATTERN = re.compile(r'"(?:[^"]|"")*"' + r"|'(?:[^']|'')*'")
 ENERGY_COLUMNS = (
     "Global_active_power",
     "Global_reactive_power",
@@ -15,6 +22,64 @@ ENERGY_COLUMNS = (
     "Sub_metering_2",
     "Sub_metering_3",
 )
+
+
+def identifier_needs_quoting(name: str) -> bool:
+    """Return True when a column/table name is not a bare DuckDB identifier.
+
+    Pure-digit names are excluded: quoting them is rarely intended and a digit
+    sequence would collide with numeric literals during the rewrite.
+    """
+    if not name or name.isdigit():
+        return False
+    return not bool(_SIMPLE_IDENTIFIER_PATTERN.match(name))
+
+
+def quote_known_identifiers(sql: str, column_names: Iterable[str]) -> str:
+    """Double-quote bare occurrences of known columns that DuckDB requires quoted.
+
+    Small local models routinely emit ``AVG(Hydroelectric Power)`` for columns
+    whose names contain spaces or punctuation, which DuckDB rejects with a parser
+    error. This pass rewrites such bare references to ``AVG("Hydroelectric
+    Power")`` using the exact column names from the dataset schema.
+
+    Columns that are already valid bare identifiers are never touched, so clean
+    schemas (energy, finance) pass through unchanged. Occurrences inside string
+    literals or that are already double-quoted are left alone. Longer names are
+    handled first so a column like ``Conventional Hydroelectric Power`` is not
+    corrupted by the shorter ``Hydroelectric Power``.
+    """
+    if not sql:
+        return sql
+
+    targets = sorted(
+        {name for name in column_names if identifier_needs_quoting(name)},
+        key=len,
+        reverse=True,
+    )
+    if not targets:
+        return sql
+
+    placeholders: dict[str, str] = {}
+
+    def _store(value: str) -> str:
+        key = f"\x00{len(placeholders)}\x00"
+        placeholders[key] = value
+        return key
+
+    # Shield existing string literals and quoted identifiers from rewriting.
+    masked = _QUOTED_OR_STRING_PATTERN.sub(lambda m: _store(m.group(0)), sql)
+
+    for name in targets:
+        quoted = '"' + name.replace('"', '""') + '"'
+        pattern = re.compile(
+            r'(?<![A-Za-z0-9_."])' + re.escape(name) + r'(?![A-Za-z0-9_"])'
+        )
+        masked = pattern.sub(lambda m, value=quoted: _store(value), masked)
+
+    for key, value in placeholders.items():
+        masked = masked.replace(key, value)
+    return masked
 
 
 def clean_sql_response(
